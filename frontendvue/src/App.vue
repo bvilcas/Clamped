@@ -51,7 +51,9 @@ watch(
         </main>
       </div>
     </div>
-    <RouterView v-else />
+    <div v-else class="full-page">
+      <RouterView />
+    </div>
   </v-app>
 </template>
 
@@ -72,5 +74,10 @@ watch(
 .app-content {
   flex: 1;
   overflow-y: auto;
+}
+
+.full-page {
+  min-height: 100vh;
+  width: 100%;
 }
 </style>

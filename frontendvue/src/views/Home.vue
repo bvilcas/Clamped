@@ -32,49 +32,43 @@ watch(
 </script>
 
 <template>
-  <v-container class="text-center mt-12">
-    <!-- Header -->
-    <v-row justify="center">
-      <v-col cols="12">
-        <h1 class="text-h4 font-weight-bold mb-4">
-          Welcome to Clamped!
-        </h1>
-      </v-col>
-    </v-row>
-
-    <!-- Description -->
-    <v-row justify="center">
-      <v-col cols="12" md="8">
-        <p class="text-body-1 mb-8">
-          Your one-stop solution for vulnerability management.
-          Built with Vue.js and Vuetify.
-        </p>
-      </v-col>
-    </v-row>
-
-    <!-- Action Buttons -->
-    <v-row justify="center" align="center" class="ga-6">
-      <v-col cols="auto">
-        <v-btn
-          color="primary"
-          size="large"
-          @click="goToRegister"
-        >
-          Go To Register
-        </v-btn>
-      </v-col>
-
-      <v-col cols="auto">
-        <v-btn
-          color="primary"
-          size="large"
-          variant="outlined"
-          @click="goToLogin"
-        >
-          Go To Login
-        </v-btn>
-      </v-col>
-    </v-row>
-  </v-container>
+  <div class="home-card">
+    <h2>Clamped!</h2>
+    <p class="home-subtitle">Your one-stop solution for vulnerability management. Built with Vue.js and Vuetify.</p>
+    <div class="home-actions">
+      <v-btn color="primary" size="large" @click="goToRegister">Go To Register</v-btn>
+      <v-btn color="primary" size="large" variant="outlined" @click="goToLogin">Go To Login</v-btn>
+    </div>
+  </div>
 </template>
+
+<style scoped>
+.home-card {
+  max-width: 480px;
+  margin: 100px auto;
+  padding: 30px;
+  background-color: rgb(var(--v-theme-surface-variant));
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.home-card h2 {
+  margin-top: 0;
+  margin-bottom: 16px;
+  color: rgb(var(--v-theme-on-surface));
+  font-size: 1.8rem;
+}
+
+.home-subtitle {
+  margin-bottom: 28px;
+  color: rgb(var(--v-theme-on-surface));
+}
+
+.home-actions {
+  display: flex;
+  justify-content: center;
+  gap: 16px;
+}
+</style>
 

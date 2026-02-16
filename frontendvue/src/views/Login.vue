@@ -29,8 +29,6 @@ const handleSubmit = async () => {
     const data = await res.json()
     authStore.login(data.accessToken)
 
-    console.log('Current timeout ID:', window.refreshTimeoutId)
-
     router.replace('/dashboard')
   } catch (err) {
     console.error(err)
