@@ -1,2 +1,6 @@
-/mvnw text eol=lf
+# Normalize line endings to LF on checkout
+* text=auto eol=lf
+
+# Force CRLF for Windows batch scripts
 *.cmd text eol=crlf
+*.bat text eol=crlf

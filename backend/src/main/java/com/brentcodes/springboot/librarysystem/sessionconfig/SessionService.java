@@ -4,7 +4,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -35,18 +34,11 @@ public class SessionService {
         }
     }
 
-    // Invalidate all sessions for a given user
-    public void invalidateAllSessions(Long userId) {
-        String sql = """
-            DELETE FROM SPRING_SESSION
-            WHERE PRIMARY_ID IN (
-                SELECT SESSION_PRIMARY_ID 
-                FROM SPRING_SESSION_ATTRIBUTES 
-                WHERE ATTRIBUTE_NAME = 'userId'
-                  AND CAST(ATTRIBUTE_BYTES AS VARCHAR) = ?
-            )
-            """;
-        jdbcTemplate.update(sql, userId.toString());
+    // Invalidate all sessions for a given user by principal name
+    // Uses the PRINCIPAL_NAME column on SPRING_SESSION, which is populated
+    // when we set FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME as a session attribute
+    public void invalidateAllSessions(String principalName) {
+        jdbcTemplate.update("DELETE FROM SPRING_SESSION WHERE PRINCIPAL_NAME = ?", principalName);
     }
 }
 

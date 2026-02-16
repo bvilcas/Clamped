@@ -1,0 +1,72 @@
+import { createVuetify } from 'vuetify'
+
+const severityColors = {
+  'severity-low': '#dcfce7',
+  'on-severity-low': '#166534',
+  'severity-medium': '#fef3c7',
+  'on-severity-medium': '#92400e',
+  'severity-high': '#fee2e2',
+  'on-severity-high': '#991b1b',
+  'severity-critical': '#e39191',
+  'on-severity-critical': '#740808',
+}
+
+export const vuetify = createVuetify({
+  theme: {
+    defaultTheme: 'light',
+    themes: {
+      light: {
+        dark: false,
+        colors: {
+          primary: '#3f51b5',
+          secondary: '#6b7280',
+          error: '#dc2626',
+          success: '#4caf50',
+          info: '#2563eb',
+          warning: '#d26900',
+          background: '#f8fafc',
+          surface: '#ffffff',
+          'surface-light': '#f3f4f6',
+          'surface-variant': '#f9fafb',
+          'on-background': '#111827',
+          'on-surface': '#111827',
+          'on-surface-variant': '#374151',
+          outline: '#e5e7eb',
+          avatar: '#3b82f6',
+          'nav-action': '#010107',
+          leave: '#555555',
+          'status-in-progress': '#df48ce',
+          'status-patched': '#16a34a',
+          'status-verified': '#7c3aed',
+          ...severityColors,
+        },
+      },
+      dark: {
+        dark: true,
+        colors: {
+          primary: '#7986cb',
+          secondary: '#9ca3af',
+          error: '#f87171',
+          success: '#4ade80',
+          info: '#60a5fa',
+          warning: '#f59e0b',
+          background: '#0b1220',
+          surface: '#1e293b',
+          'surface-light': '#172032',
+          'surface-variant': '#172032',
+          'on-background': '#e5e7eb',
+          'on-surface': '#e5e7eb',
+          'on-surface-variant': '#9ca3af',
+          outline: '#334155',
+          avatar: '#60a5fa',
+          'nav-action': '#a2a7c1',
+          leave: '#9ca3af',
+          'status-in-progress': '#f0abff',
+          'status-patched': '#4ade80',
+          'status-verified': '#a78bfa',
+          ...severityColors,
+        },
+      },
+    },
+  },
+})

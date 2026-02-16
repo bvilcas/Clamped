@@ -7,13 +7,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
+import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Instant;
-import java.util.Map;
-
-@CrossOrigin(origins = "http://localhost:3000", allowCredentials = "true")
+@CrossOrigin(origins = {"http://localhost:3000", "http://localhost:5173"}, allowCredentials = "true")
 @RestController
 @RequestMapping("/api/v1/auth")
 @RequiredArgsConstructor
@@ -42,8 +39,9 @@ public class AuthenticationController {
         // Create session
         HttpSession session = httpReq.getSession(true); // true = create session if one doesn't exist
 
-        // Store user ID (or any info) as session attribute
+        // Store user ID and principal name index as session attributes
         session.setAttribute("userId", userPrincipal.getId());
+        session.setAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME, userPrincipal.getUsername());
 
         // Generate short-lived access token using principal
         String jwt = jwtService.generateAccessToken(userPrincipal);
@@ -68,7 +66,7 @@ public class AuthenticationController {
         // 2️. Create a new HttpSession (or reuse existing one) and implicitly store in cookie (no Response only Req)
         HttpSession newSession = httpReq.getSession(true); // ✅ Start fresh session for this login
         newSession.setAttribute("userId", userPrincipal.getId());
-
+        newSession.setAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME, userPrincipal.getUsername());
 
         // 3. Store user ID (or any info) as session attribute
         //     Spring Session JDBC will persist this to the DB:
@@ -112,12 +110,18 @@ public class AuthenticationController {
         return ResponseEntity.noContent().build(); // Return 204: Kill Session, to be handled by front-end and re-directed to login page
     }
 
-    // Logout: invalidate all existing sessions on all browsers (you need valid access token)
-    // Follow Best Practice: You need to be logged in (with a valid access token) to log yourself out everywhere.
+    // Logout: invalidate all existing sessions on all browsers
+    // Uses the session cookie to identify the user (same pattern as /refresh)
     @PostMapping("/logoutAllSessions")
-    public ResponseEntity<Void> logoutAllSessions(Authentication authentication) {
-        Long userId = ((UserPrincipal) authentication.getPrincipal()).getId();
-        sessionService.invalidateAllSessions(userId);
+    public ResponseEntity<Void> logoutAllSessions(HttpServletRequest httpReq) {
+        HttpSession session = httpReq.getSession(false);
+        if (session == null || session.getAttribute("userId") == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        Long userId = (Long) session.getAttribute("userId");
+        UserPrincipal principal = authenticationService.getPrincipalById(userId);
+        sessionService.invalidateAllSessions(principal.getUsername());
 
         return ResponseEntity.noContent().build();
     }
