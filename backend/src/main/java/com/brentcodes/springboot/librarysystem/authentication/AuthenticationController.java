@@ -41,7 +41,7 @@ public class AuthenticationController {
 
         // Store user ID and principal name index as session attributes
         session.setAttribute("userId", userPrincipal.getId());
-        session.setAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME, userPrincipal.getUsername());
+        session.setAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME, userPrincipal.getId().toString());
 
         // Generate short-lived access token using principal
         String jwt = jwtService.generateAccessToken(userPrincipal);
@@ -66,7 +66,7 @@ public class AuthenticationController {
         // 2️. Create a new HttpSession (or reuse existing one) and implicitly store in cookie (no Response only Req)
         HttpSession newSession = httpReq.getSession(true); // ✅ Start fresh session for this login
         newSession.setAttribute("userId", userPrincipal.getId());
-        newSession.setAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME, userPrincipal.getUsername());
+        newSession.setAttribute(FindByIndexNameSessionRepository.PRINCIPAL_NAME_INDEX_NAME, userPrincipal.getId().toString());
 
         // 3. Store user ID (or any info) as session attribute
         //     Spring Session JDBC will persist this to the DB:
@@ -121,7 +121,7 @@ public class AuthenticationController {
 
         Long userId = (Long) session.getAttribute("userId");
         UserPrincipal principal = authenticationService.getPrincipalById(userId);
-        sessionService.invalidateAllSessions(principal.getUsername());
+        sessionService.invalidateAllSessions(userId.toString());
 
         return ResponseEntity.noContent().build();
     }
