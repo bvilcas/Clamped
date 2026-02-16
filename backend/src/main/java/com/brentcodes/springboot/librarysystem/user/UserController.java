@@ -52,7 +52,7 @@ public class UserController {
 
         // ✅ Invalidate all sessions (including current session)
         Long userId = ((UserPrincipal) authentication.getPrincipal()).getId();
-        sessionService.invalidateAllSessions(userId);
+        sessionService.invalidateAllSessions(userId.toString());
 
         // This is only applies to the current session
         // 204 = no content, frontend should redirect to log-in where the user can get a new access token
@@ -69,7 +69,7 @@ public class UserController {
 
         // Invalidate all sessions (including current session)
         Long userId = ((UserPrincipal) authentication.getPrincipal()).getId();
-        sessionService.invalidateAllSessions(userId);
+        sessionService.invalidateAllSessions(userId.toString());
 
         // This is only applies to the current session
         // 204 = no content, frontend should redirect to log-in where the user can get a new access token

@@ -90,7 +90,7 @@ public class AdminController {
         User user = adminService.updateUserEmailOrPassword(userId, email, password);
 
         // ✅ Revoke all sessions tied to this user
-        sessionService.invalidateAllSessions(user.getId());
+        sessionService.invalidateAllSessions(user.getId().toString());
 
         // ✅ Force token expiration by bumping credentialsChangedAt (redundant after delete, but useful if soft-deleting)
         user.setCredentialsChangedAt(Instant.now()); // Optional if you delete right after
@@ -107,7 +107,7 @@ public class AdminController {
                 .orElseThrow(() -> new IllegalStateException("User not found"));
 
         // ✅ 1. Revoke all sessions tied to this user
-        sessionService.invalidateAllSessions(user.getId());
+        sessionService.invalidateAllSessions(user.getId().toString());
 
         // ✅ 2. Force token expiration by bumping credentialsChangedAt (redundant after delete, but useful if soft-deleting)
         user.setCredentialsChangedAt(Instant.now()); // Optional if you delete right after
