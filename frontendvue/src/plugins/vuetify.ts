@@ -51,6 +51,7 @@ export const vuetify = createVuetify({
           info: '#60a5fa',
           warning: '#f59e0b',
           background: '#0b1220',
+
           surface: '#1e293b',
           'surface-light': '#172032',
           'surface-variant': '#172032',

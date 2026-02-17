@@ -430,7 +430,7 @@ const handleChangeMemberRole = async (userId: string, currentRole: string) => {
                     v-if="role === 'LEAD'"
                     size="small"
                     variant="tonal"
-                    color="red"
+                    color="grey"
                     @click="handleDeleteVulnerability(v.id)"
                   >
                     Delete
@@ -745,4 +745,5 @@ const handleChangeMemberRole = async (userId: string, currentRole: string) => {
 .report-section textarea {
   margin: 6px 0 !important;
 }
+
 </style>

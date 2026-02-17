@@ -28,11 +28,13 @@ const isAboutActive = computed(() => route.path.startsWith("/about"))
     </div>
 
     <nav class="nav">
-      <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isProjectsActive }" @click="router.push('/projects')">
+      <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isProjectsActive }"
+        @click="router.push('/projects')">
         📁 Projects
       </v-btn>
 
-      <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isVulnsActive }" @click="router.push('/vulns')">
+      <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isVulnsActive }"
+        @click="router.push('/vulns')">
         🛡️ My Vulns
       </v-btn>
 
@@ -46,15 +48,18 @@ const isAboutActive = computed(() => route.path.startsWith("/about"))
     </nav>
 
     <div class="sidebar-footer">
-      <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isHelpActive }" @click="router.push('/help')">
+      <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isHelpActive }"
+        @click="router.push('/help')">
         ❓ Help/Docs
       </v-btn>
 
-      <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isContactActive }" @click="router.push('/contact')">
+      <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isContactActive }"
+        @click="router.push('/contact')">
         📧 Contact Us
       </v-btn>
 
-      <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isAboutActive }" @click="router.push('/about')">
+      <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isAboutActive }"
+        @click="router.push('/about')">
         ℹ️ About Clamped!
       </v-btn>
 
@@ -96,8 +101,14 @@ const isAboutActive = computed(() => route.path.startsWith("/about"))
   letter-spacing: normal !important;
   margin-right: -10px;
 }
-.collapse-btn :deep(.v-btn__overlay) { opacity: 0 !important; }
-.collapse-btn:hover { background-color: rgb(var(--v-theme-outline)) !important; }
+
+.collapse-btn :deep(.v-btn__overlay) {
+  opacity: 0 !important;
+}
+
+.collapse-btn:hover {
+  background-color: rgb(var(--v-theme-outline)) !important;
+}
 
 .logo {
   width: 100px;
@@ -115,25 +126,21 @@ const isAboutActive = computed(() => route.path.startsWith("/about"))
   display: block;
 }
 
+
 .nav {
   flex: 1;
 }
 
 .nav-item {
   justify-content: flex-start !important;
-  text-transform: none !important;
-  letter-spacing: normal !important;
-  font-size: 0.95rem !important;
-  color: rgb(var(--v-theme-on-surface)) !important;
   margin-bottom: 0.3rem;
-  border-radius: 8px !important;
 }
 
+/* Overriding of Vuetify Behavior (for no-background button) */
 .nav-item :deep(.v-btn__overlay) { opacity: 0 !important; }
-.nav-item :deep(.v-ripple__container) { color: rgb(var(--v-theme-nav-action)); }
-.nav-item :deep(.v-ripple__animation) { opacity: 0.10 !important; }
-.nav-item:hover { background-color: rgb(var(--v-theme-outline)) !important; }
-.nav-item.nav-item-active { background-color: rgba(var(--v-theme-nav-action), 0.18) !important; }
+.nav-item :deep(.v-ripple__animation) { opacity: 0.08 !important; }
+.nav-item:hover { background-color: rgba(var(--v-theme-on-surface), 0.12) !important; }
+.nav-item.nav-item-active { background-color: rgba(var(--v-theme-on-surface), 0.20) !important; }
 
 .sidebar-footer {
   display: flex;
