@@ -72,109 +72,55 @@ const handlePasswordChange = async () => {
 </script>
 
 <template>
-  <div v-if="!user">
-    <p>Loading profile...</p>
-  </div>
-  <div v-else class="profile-page">
-    <h1 class="profile-title">My Profile</h1>
+  <v-container class="pa-8">
+    <p v-if="!user" class="text-secondary">Loading profile...</p>
 
-    <div class="profile-card">
-      <p><strong>Name:</strong> {{ user.firstname }} {{ user.lastname }}</p>
-      <p><strong>Email:</strong> {{ user.username }}</p>
-      <p><strong>Role:</strong> {{ user.role }}</p>
-    </div>
+    <template v-else>
+      <h1 class="text-info mb-6">My Profile</h1>
 
-    <div class="profile-section">
-      <h2>Update Name</h2>
-      <v-form @submit.prevent="handleUpdate" class="profile-form">
-        <v-text-field
-          v-model="updateForm.firstName"
-          label="First Name"
-          variant="outlined"
-          density="comfortable"
-        />
-        <v-text-field
-          v-model="updateForm.lastName"
-          label="Last Name"
-          variant="outlined"
-          density="comfortable"
-        />
-        <v-btn type="submit" color="info">Update</v-btn>
-      </v-form>
-    </div>
+      <!-- Info -->
+      <v-card variant="elevated" elevation="2" class="mb-6">
+        <v-card-text>
+          <p class="mb-1"><strong>Name:</strong> {{ user.firstname }} {{ user.lastname }}</p>
+          <p class="mb-1"><strong>Email:</strong> {{ user.username }}</p>
+          <p><strong>Role:</strong> {{ user.role }}</p>
+        </v-card-text>
+      </v-card>
 
-    <div class="profile-section">
-      <h2>Change Email</h2>
-      <v-form @submit.prevent="handleEmailChange" class="profile-form">
-        <v-text-field
-          v-model="email"
-          label="New Email"
-          type="email"
-          variant="outlined"
-          density="comfortable"
-        />
-        <v-btn type="submit" color="secondary">Change Email</v-btn>
-      </v-form>
-    </div>
+      <!-- Update Name -->
+      <v-card variant="elevated" elevation="2" class="mb-6">
+        <v-card-title>Update Name</v-card-title>
+        <v-card-text>
+          <v-form @submit.prevent="handleUpdate" class="d-flex flex-column ga-2">
+            <v-text-field v-model="updateForm.firstName" label="First Name" variant="outlined" density="comfortable" />
+            <v-text-field v-model="updateForm.lastName" label="Last Name" variant="outlined" density="comfortable" />
+            <div><v-btn type="submit" color="info">Update</v-btn></div>
+          </v-form>
+        </v-card-text>
+      </v-card>
 
-    <div class="profile-section">
-      <h2>Change Password</h2>
-      <v-form @submit.prevent="handlePasswordChange" class="profile-form">
-        <v-text-field
-          v-model="passwordForm.oldPassword"
-          label="Old Password"
-          type="password"
-          variant="outlined"
-          density="comfortable"
-        />
-        <v-text-field
-          v-model="passwordForm.newPassword"
-          label="New Password"
-          type="password"
-          variant="outlined"
-          density="comfortable"
-        />
-        <v-btn type="submit" color="error">Change Password</v-btn>
-      </v-form>
-    </div>
-  </div>
+      <!-- Change Email -->
+      <v-card variant="elevated" elevation="2" class="mb-6">
+        <v-card-title>Change Email</v-card-title>
+        <v-card-text>
+          <v-form @submit.prevent="handleEmailChange" class="d-flex flex-column ga-2">
+            <v-text-field v-model="email" label="New Email" type="email" variant="outlined" density="comfortable" />
+            <div><v-btn type="submit" color="info">Change Email</v-btn></div>
+          </v-form>
+        </v-card-text>
+      </v-card>
+
+      <!-- Change Password -->
+      <v-card variant="elevated" elevation="2" class="mb-6">
+        <v-card-title>Change Password</v-card-title>
+        <v-card-text>
+          <v-form @submit.prevent="handlePasswordChange" class="d-flex flex-column ga-2">
+            <v-text-field v-model="passwordForm.oldPassword" label="Old Password" type="password" variant="outlined" density="comfortable" />
+            <v-text-field v-model="passwordForm.newPassword" label="New Password" type="password" variant="outlined" density="comfortable" />
+            <div><v-btn type="submit" color="error">Change Password</v-btn></div>
+          </v-form>
+        </v-card-text>
+      </v-card>
+    </template>
+  </v-container>
 </template>
-
-<style scoped>
-.profile-page {
-  padding: 2rem;
-  max-width: 700px;
-  margin: 0 auto;
-  font-family: Arial, sans-serif;
-  color: rgb(var(--v-theme-on-surface));
-}
-
-.profile-title {
-  font-size: 2rem;
-  margin-bottom: 1rem;
-}
-
-.profile-card {
-  background: rgb(var(--v-theme-surface));
-  border: 1px solid rgb(var(--v-theme-outline));
-  border-radius: 8px;
-  padding: 1rem 1.5rem;
-  margin-bottom: 2rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
-
-.profile-section {
-  margin-bottom: 2rem;
-}
-
-.profile-section h2 {
-  font-size: 1.2rem;
-  margin-bottom: 0.5rem;
-}
-
-.profile-form {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-</style>

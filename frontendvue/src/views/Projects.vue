@@ -36,100 +36,44 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="projects-page">
-    <div class="project-title-row">
-      <h1 class="project-title">My Projects</h1>
-    </div>
+  <v-container class="pa-8">
+    <h1 class="text-info mb-6">My Projects</h1>
 
-    <p v-if="projects.length === 0" class="empty">No projects found.</p>
+    <p v-if="projects.length === 0" class="text-secondary">No projects found.</p>
 
-    <ul v-else class="project-list">
-      <li
+    <v-row v-else>
+      <v-col
         v-for="p in projects"
         :key="p.id"
-        class="project-card"
-        @click="router.push(`/project/${p.id}`)"
+        cols="12" sm="6" md="4"
       >
-        <h3>{{ p.name }}</h3>
-        <p>{{ p.description || 'No description provided.' }}</p>
-        <div class="meta">
-          <span><strong>Role:</strong> {{ p.myRole }}</span>
-          <span v-if="p.createdAt">
-            <strong>Created:</strong> {{ new Date(p.createdAt).toLocaleDateString() }}
-          </span>
-        </div>
-      </li>
-    </ul>
-  </div>
+        <v-card
+          variant="elevated"
+          elevation="2"
+          class="project-card"
+          @click="router.push(`/project/${p.id}`)"
+        >
+          <v-card-title>{{ p.name }}</v-card-title>
+          <v-card-text>
+            <p class="text-on-surface-variant mb-2">{{ p.description || 'No description provided.' }}</p>
+            <div class="text-secondary text-caption">
+              <div><strong>Role:</strong> {{ p.myRole }}</div>
+              <div v-if="p.createdAt"><strong>Created:</strong> {{ new Date(p.createdAt).toLocaleDateString() }}</div>
+            </div>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
 <style scoped>
-.projects-page {
-  padding: 2rem;
-  color: rgb(var(--v-theme-on-surface));
-}
-
-.project-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-}
-
-.project-title {
-  font-size: 1.7rem;
-  font-weight: 700;
-  margin: 0;
-  color: rgb(var(--v-theme-on-surface));
-}
-
-.project-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
-}
-
 .project-card {
-  background: rgb(var(--v-theme-surface));
-  border: 1px solid rgb(var(--v-theme-outline));
-  border-radius: 10px;
-  padding: 1rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
 
 .project-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.project-card h3 {
-  font-size: 1.2rem;
-  margin: 0;
-}
-
-.project-card p {
-  font-size: 0.95rem;
-  color: rgb(var(--v-theme-on-surface-variant));
-}
-
-.meta {
-  font-size: 0.85rem;
-  color: rgb(var(--v-theme-secondary));
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.empty {
-  font-size: 0.95rem;
-  color: rgb(var(--v-theme-secondary));
 }
 </style>

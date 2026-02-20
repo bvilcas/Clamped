@@ -17,8 +17,8 @@ const isAboutActive = computed(() => route.path.startsWith("/about"))
 </script>
 
 <template>
-  <aside class="sidebar">
-    <div class="sidebar-header">
+  <aside class="sidebar pa-4">
+    <div class="d-flex align-center justify-space-between mb-2" style="margin-left: 17px;">
       <div class="logo" @click="router.push('/dashboard')" style="cursor: pointer;">
         <img src="/logo.png" alt="Clamped Logo" />
       </div>
@@ -29,45 +29,33 @@ const isAboutActive = computed(() => route.path.startsWith("/about"))
 
     <nav class="nav">
       <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isProjectsActive }"
-        @click="router.push('/projects')">
-        📁 Projects
+        prepend-icon="mdi-folder-outline" @click="router.push('/projects')">
+        Projects
       </v-btn>
-
       <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isVulnsActive }"
-        @click="router.push('/vulns')">
-        🛡️ My Vulns
+        prepend-icon="mdi-shield-alert-outline" @click="router.push('/vulns')">
+        My Vulns
       </v-btn>
-
-      <v-btn variant="text" block class="nav-item">
-        💬 Messages
-      </v-btn>
-
-      <v-btn variant="text" block class="nav-item">
-        👥 Team
-      </v-btn>
+      <v-btn variant="text" block class="nav-item" prepend-icon="mdi-message-outline">Messages</v-btn>
+      <v-btn variant="text" block class="nav-item" prepend-icon="mdi-account-group-outline">Team</v-btn>
     </nav>
 
-    <div class="sidebar-footer">
+    <div class="d-flex flex-column ga-2 mt-auto mb-4">
       <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isHelpActive }"
-        @click="router.push('/help')">
-        ❓ Help/Docs
+        prepend-icon="mdi-help-circle-outline" @click="router.push('/help')">
+        Help/Docs
       </v-btn>
-
       <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isContactActive }"
-        @click="router.push('/contact')">
-        📧 Contact Us
+        prepend-icon="mdi-email-outline" @click="router.push('/contact')">
+        Contact Us
       </v-btn>
-
       <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isAboutActive }"
-        @click="router.push('/about')">
-        ℹ️ About Clamped!
+        prepend-icon="mdi-information-outline" @click="router.push('/about')">
+        About Clamped!
       </v-btn>
-
-      <div class="sidebar-logout">
-        <v-btn color="error" block @click="authStore.logout()">
-          Logout
-        </v-btn>
-      </div>
+      <v-btn color="error" block prepend-icon="mdi-logout" @click="authStore.logout()">
+        Logout
+      </v-btn>
     </div>
   </aside>
 </template>
@@ -79,16 +67,6 @@ const isAboutActive = computed(() => route.path.startsWith("/about"))
   border-right: 1px solid rgb(var(--v-theme-outline));
   display: flex;
   flex-direction: column;
-  padding: 1rem;
-}
-
-.sidebar-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 0.5rem;
-  margin-left: 17px;
-  line-height: 0;
 }
 
 .collapse-btn {
@@ -126,7 +104,6 @@ const isAboutActive = computed(() => route.path.startsWith("/about"))
   display: block;
 }
 
-
 .nav {
   flex: 1;
 }
@@ -136,18 +113,8 @@ const isAboutActive = computed(() => route.path.startsWith("/about"))
   margin-bottom: 0.3rem;
 }
 
-.nav-item.nav-item-active { background-color: rgba(var(--v-theme-on-surface), 0.20) !important; }
-
-.sidebar-footer {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-top: auto;
-  margin-bottom: 1rem;
-}
-
-.sidebar-logout {
-  margin-top: 2px;
+.nav-item-active {
+  background-color: rgba(var(--v-theme-on-surface), 0.20) !important;
 }
 
 @media (max-width: 768px) {

@@ -112,141 +112,138 @@ const projects = ref<ProjectDTO[]>([])
 </script>
 
 <template>
-  <section class="content">
+  <v-container class="pa-8">
+    <!-- Title row -->
     <div class="title-row">
-      <h1 class="title">Where You Left Off</h1>
-      <div class="stats-bar">
+      <h1 class="text-info">Where You Left Off</h1>
+      <div class="stats-bar text-secondary text-body-1">
         <span>Open Vulns: <strong>{{ reported.length }}</strong></span>
         <span>Patched: <strong>{{ verified.length }}</strong></span>
         <span>Overdue: <strong>2</strong></span>
       </div>
     </div>
 
-    <div class="cards">
-          <div class="card">
-            <h2>Recent Reports</h2>
-            <p v-if="reported.length === 0" class="empty">
-              No reports submitted.
-            </p>
-            <ul v-else class="list">
-              <li v-for="v in reported" :key="v.id">
-                {{ v.title }} - {{ v.status }}
-              </li>
-            </ul>
-          </div>
+    <!-- First row: vuln cards -->
+    <div class="section-header">
+      <h2>My Vulnerabilities</h2>
+      <v-btn color="info" @click="router.push('/report')">+ Report Vulnerability</v-btn>
+    </div>
+    <v-row class="mt-2">
+      <v-col cols="12" sm="6" md="4">
+        <v-card variant="elevated" elevation="2" class="h-100">
+          <v-card-title>Recent Reports</v-card-title>
+          <v-card-text>
+            <p v-if="reported.length === 0" class="empty-state">No reports submitted.</p>
+            <v-list v-else density="compact">
+              <template v-for="(v, i) in reported" :key="v.id">
+                <v-divider v-if="i > 0" />
+                <v-list-item>{{ v.title }} - {{ v.status }}</v-list-item>
+              </template>
+            </v-list>
+          </v-card-text>
+        </v-card>
+      </v-col>
 
-          <div class="card">
-            <h2>Assigned to You</h2>
-            <p v-if="assigned.length === 0" class="empty">
-              No tasks assigned.
-            </p>
-            <ul v-else class="list">
-              <li v-for="v in assigned" :key="v.id">
-                {{ v.title }} - {{ v.status }}
-              </li>
-            </ul>
-          </div>
+      <v-col cols="12" sm="6" md="4">
+        <v-card variant="elevated" elevation="2" class="h-100">
+          <v-card-title>Assigned to You</v-card-title>
+          <v-card-text>
+            <p v-if="assigned.length === 0" class="empty-state">No tasks assigned.</p>
+            <v-list v-else density="compact">
+              <template v-for="(v, i) in assigned" :key="v.id">
+                <v-divider v-if="i > 0" />
+                <v-list-item>{{ v.title }} - {{ v.status }}</v-list-item>
+              </template>
+            </v-list>
+          </v-card-text>
+        </v-card>
+      </v-col>
 
-          <div class="card">
-            <h2>Verified by You</h2>
-            <p v-if="verified.length === 0" class="empty">
-              No verifications yet.
-            </p>
-            <ul v-else class="list">
-              <li v-for="v in verified" :key="v.id">
-                {{ v.title }} - {{ v.status }}
-              </li>
-            </ul>
-          </div>
+      <v-col cols="12" sm="6" md="4">
+        <v-card variant="elevated" elevation="2" class="h-100">
+          <v-card-title>Verified by You</v-card-title>
+          <v-card-text>
+            <p v-if="verified.length === 0" class="empty-state">No verifications yet.</p>
+            <v-list v-else density="compact">
+              <template v-for="(v, i) in verified" :key="v.id">
+                <v-divider v-if="i > 0" />
+                <v-list-item>{{ v.title }} - {{ v.status }}</v-list-item>
+              </template>
+            </v-list>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- Second row: project cards -->
+    <div class="section-header">
+      <h2>My Projects</h2>
+      <v-btn color="info" @click="router.push('/projects/create')">+ Create Project</v-btn>
+    </div>
+    <v-row class="mt-2">
+      <v-col cols="12" sm="6" md="4">
+        <v-card variant="elevated" elevation="2" class="h-100">
+          <v-card-title>Recently Updated Projects</v-card-title>
+          <v-card-text>
+            <p v-if="projects.length === 0" class="empty-state">No recent project activity.</p>
+            <v-list v-else density="compact">
+              <template v-for="(p, i) in projects.slice(0, 5)" :key="p.id">
+                <v-divider v-if="i > 0" />
+                <v-list-item>{{ p.name }}</v-list-item>
+              </template>
+            </v-list>
+          </v-card-text>
+        </v-card>
+      </v-col>
+
+      <v-col cols="12" sm="6" md="4">
+        <v-card variant="elevated" elevation="2" class="h-100">
+          <v-card-title>Your Activity Breakdown</v-card-title>
+          <v-card-text>
+            <v-list density="compact">
+              <v-list-item>Reported: {{ reported.length }}</v-list-item>
+              <v-divider />
+              <v-list-item>Assigned: {{ assigned.length }}</v-list-item>
+              <v-divider />
+              <v-list-item>Verified: {{ verified.length }}</v-list-item>
+            </v-list>
+          </v-card-text>
+        </v-card>
+      </v-col>
+
+      <v-col cols="12" sm="6" md="4">
+        <v-card variant="elevated" elevation="2" class="h-100">
+          <v-card-title>My Projects</v-card-title>
+          <v-card-text>
+            <p v-if="projects.length === 0" class="empty-state">No projects yet.</p>
+            <v-list v-else density="compact">
+              <template v-for="(p, i) in projects" :key="p.id">
+                <v-divider v-if="i > 0" />
+                <v-list-item style="cursor: pointer" @click="router.push(`/project/${p.id}`)">
+                  {{ p.name }}
+                </v-list-item>
+              </template>
+            </v-list>
+          </v-card-text>
+        </v-card>
+      </v-col>
+    </v-row>
+
+    <!-- Admin panel (NOT SHOWN) -->
+    <v-card v-if="user?.role === 'ADMIN'" variant="elevated" elevation="2" class="mt-6">
+      <v-card-title>👑 Admin Panel</v-card-title>
+      <v-card-text>
+        <div class="d-flex ga-3">
+          <v-btn color="info" @click="router.push('/admin/users')">Manage Users</v-btn>
+          <v-btn color="secondary" @click="router.push('/admin/assign')">Assign Roles</v-btn>
         </div>
+      </v-card-text>
+    </v-card>
 
-        <!-- ADMIN -->
-        <div v-if="user?.role === 'ADMIN'" class="admin-card">
-          <h2>👑 Admin Panel</h2>
-          <div class="actions">
-            <v-btn
-              color="info"
-              @click="router.push('/admin/users')"
-            >
-              Manage Users
-            </v-btn>
-            <v-btn
-              color="secondary"
-              @click="router.push('/admin/assign')"
-            >
-              Assign Roles
-            </v-btn>
-          </div>
-        </div>
-
-        <div class="create">
-          <v-btn
-            color="info"
-            @click="router.push('/report')"
-          >
-            + Report Vulnerability
-          </v-btn>
-        </div>
-
-        <!-- SECOND ROW -->
-        <div class="cards secondary-cards">
-          <div class="card">
-            <h2>Recently Updated Projects</h2>
-            <p v-if="projects.length === 0" class="empty">
-              No recent project activity.
-            </p>
-            <ul v-else class="list">
-              <li v-for="p in projects.slice(0, 5)" :key="p.id">
-                {{ p.name }}
-              </li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h2>Your Activity Breakdown</h2>
-            <ul class="list">
-              <li>Reported: {{ reported.length }}</li>
-              <li>Assigned: {{ assigned.length }}</li>
-              <li>Verified: {{ verified.length }}</li>
-            </ul>
-          </div>
-
-          <div class="card">
-            <h2>My Projects</h2>
-            <p v-if="projects.length === 0" class="empty">
-              No projects yet.
-            </p>
-            <ul v-else class="list">
-              <li
-                v-for="p in projects"
-                :key="p.id"
-                style="cursor: pointer"
-                @click="router.push(`/project/${p.id}`)"
-              >
-                {{ p.name }}
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="create">
-          <v-btn
-            color="info"
-            @click="router.push('/projects/create')"
-          >
-            + Create Project
-          </v-btn>
-        </div>
-  </section>
+  </v-container>
 </template>
 
-
 <style scoped>
-.content {
-  padding: 2rem;
-  overflow-y: auto;
-}
-
 .title-row {
   display: flex;
   align-items: center;
@@ -254,89 +251,21 @@ const projects = ref<ProjectDTO[]>([])
   margin-bottom: 1.5rem;
 }
 
-.title {
-  font-size: 1.7rem;
-  font-weight: 700;
-  margin: 0;
-  color: rgb(var(--v-theme-on-surface));
-}
-
 .stats-bar {
   display: flex;
   gap: 1rem;
-  font-size: 0.95rem;
 }
 
-.cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.25rem;
-}
-
-.secondary-cards {
-  margin-top: 2rem;
-}
-
-.card {
-  background: rgb(var(--v-theme-surface));
-  border: 1px solid rgb(var(--v-theme-outline));
-  border-radius: 12px;
-  padding: 1rem;
-}
-
-.card h2 {
-  font-size: 1rem;
-  margin-bottom: 1rem;
-}
-
-.list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.list li {
-  border-top: 1px solid rgb(var(--v-theme-outline));
-  padding: 0.6rem 0;
-}
-
-.list li:first-child {
-  border-top: none;
-}
-
-.empty {
+.empty-state {
   color: rgb(var(--v-theme-secondary));
-  font-size: 0.9rem;
+  font-size: 0.875rem;
 }
 
-.create {
-  margin-top: 2rem;
-  text-align: right;
-}
-
-.admin-card {
-  margin-top: 2rem;
-  background: rgb(var(--v-theme-surface));
-  border: 1px solid rgb(var(--v-theme-outline));
-  border-radius: 12px;
-  padding: 1rem;
-}
-
-.actions {
+.section-header {
   display: flex;
-  gap: 0.75rem;
-  margin-top: 1rem;
-}
-
-@media (max-width: 1024px) {
-  .cards {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .cards {
-    grid-template-columns: 1fr;
-  }
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  margin-top: 1.5rem;
 }
 </style>

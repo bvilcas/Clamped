@@ -29,137 +29,78 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="vulns-page">
-    <div class="vuln-title-row">
-      <h1 class="vuln-title">My Vulnerabilities</h1>
-    </div>
+  <v-container class="pa-8">
+    <h1 class="text-info mb-6">My Vulnerabilities</h1>
 
-    <section class="vuln-section">
-      <h2>Reported by Me</h2>
-      <p v-if="reported.length === 0" class="empty">None found.</p>
-      <ul v-else class="vuln-list">
-        <li v-for="v in reported" :key="v.id" class="vuln-card">
-          <h3>{{ v.title }}</h3>
-          <p>{{ v.description || 'No description provided.' }}</p>
-          <div class="meta">
-            <span><strong>Severity:</strong> {{ v.severity }}</span>
-            <span><strong>Status:</strong> {{ v.status }}</span>
-            <span v-if="v.dueAt"><strong>Due:</strong> {{ new Date(v.dueAt).toLocaleDateString() }}</span>
-          </div>
-        </li>
-      </ul>
+    <section class="mb-8">
+      <h2 class="mb-4">Reported by Me</h2>
+      <p v-if="reported.length === 0" class="text-secondary">None found.</p>
+      <v-row v-else>
+        <v-col v-for="v in reported" :key="v.id" cols="12" sm="6" md="4">
+          <v-card variant="elevated" elevation="2" class="vuln-card">
+            <v-card-title>{{ v.title }}</v-card-title>
+            <v-card-text>
+              <p class="text-on-surface-variant mb-2">{{ v.description || 'No description provided.' }}</p>
+              <div class="text-secondary text-caption">
+                <div><strong>Severity:</strong> {{ v.severity }}</div>
+                <div><strong>Status:</strong> {{ v.status }}</div>
+                <div v-if="v.dueAt"><strong>Due:</strong> {{ new Date(v.dueAt).toLocaleDateString() }}</div>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
     </section>
 
-    <section class="vuln-section">
-      <h2>Assigned to Me</h2>
-      <p v-if="assigned.length === 0" class="empty">None found.</p>
-      <ul v-else class="vuln-list">
-        <li v-for="v in assigned" :key="v.id" class="vuln-card">
-          <h3>{{ v.title }}</h3>
-          <p>{{ v.description || 'No description provided.' }}</p>
-          <div class="meta">
-            <span><strong>Severity:</strong> {{ v.severity }}</span>
-            <span><strong>Status:</strong> {{ v.status }}</span>
-            <span v-if="v.dueAt"><strong>Due:</strong> {{ new Date(v.dueAt).toLocaleDateString() }}</span>
-          </div>
-        </li>
-      </ul>
+    <section class="mb-8">
+      <h2 class="mb-4">Assigned to Me</h2>
+      <p v-if="assigned.length === 0" class="text-secondary">None found.</p>
+      <v-row v-else>
+        <v-col v-for="v in assigned" :key="v.id" cols="12" sm="6" md="4">
+          <v-card variant="elevated" elevation="2" class="vuln-card">
+            <v-card-title>{{ v.title }}</v-card-title>
+            <v-card-text>
+              <p class="text-on-surface-variant mb-2">{{ v.description || 'No description provided.' }}</p>
+              <div class="text-secondary text-caption">
+                <div><strong>Severity:</strong> {{ v.severity }}</div>
+                <div><strong>Status:</strong> {{ v.status }}</div>
+                <div v-if="v.dueAt"><strong>Due:</strong> {{ new Date(v.dueAt).toLocaleDateString() }}</div>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
     </section>
 
-    <section class="vuln-section">
-      <h2>Verified by Me</h2>
-      <p v-if="verified.length === 0" class="empty">None found.</p>
-      <ul v-else class="vuln-list">
-        <li v-for="v in verified" :key="v.id" class="vuln-card">
-          <h3>{{ v.title }}</h3>
-          <p>{{ v.description || 'No description provided.' }}</p>
-          <div class="meta">
-            <span><strong>Severity:</strong> {{ v.severity }}</span>
-            <span><strong>Status:</strong> {{ v.status }}</span>
-            <span v-if="v.dueAt"><strong>Due:</strong> {{ new Date(v.dueAt).toLocaleDateString() }}</span>
-          </div>
-        </li>
-      </ul>
+    <section class="mb-8">
+      <h2 class="mb-4">Verified by Me</h2>
+      <p v-if="verified.length === 0" class="text-secondary">None found.</p>
+      <v-row v-else>
+        <v-col v-for="v in verified" :key="v.id" cols="12" sm="6" md="4">
+          <v-card variant="elevated" elevation="2" class="vuln-card">
+            <v-card-title>{{ v.title }}</v-card-title>
+            <v-card-text>
+              <p class="text-on-surface-variant mb-2">{{ v.description || 'No description provided.' }}</p>
+              <div class="text-secondary text-caption">
+                <div><strong>Severity:</strong> {{ v.severity }}</div>
+                <div><strong>Status:</strong> {{ v.status }}</div>
+                <div v-if="v.dueAt"><strong>Due:</strong> {{ new Date(v.dueAt).toLocaleDateString() }}</div>
+              </div>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
     </section>
-  </div>
+  </v-container>
 </template>
 
 <style scoped>
-.vulns-page {
-  padding: 2rem;
-  color: rgb(var(--v-theme-on-surface));
-}
-
-.vuln-title-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
-}
-
-.vuln-title {
-  font-size: 1.7rem;
-  font-weight: 700;
-  margin: 0;
-  color: rgb(var(--v-theme-on-surface));
-}
-
-.vuln-section {
-  margin-bottom: 2rem;
-}
-
-.vuln-section h2 {
-  font-size: 1.3rem;
-  margin-bottom: 0.8rem;
-  color: rgb(var(--v-theme-info));
-}
-
-.vuln-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
-}
-
 .vuln-card {
-  background: rgb(var(--v-theme-surface));
-  border: 1px solid rgb(var(--v-theme-outline));
-  border-radius: 10px;
-  padding: 1rem;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
+  cursor: pointer;
   transition: transform 0.15s ease;
 }
 
 .vuln-card:hover {
   transform: translateY(-3px);
-}
-
-.vuln-card h3 {
-  font-size: 1.1rem;
-  margin: 0;
-}
-
-.vuln-card p {
-  font-size: 0.95rem;
-  color: rgb(var(--v-theme-on-surface-variant));
-  flex-grow: 1;
-}
-
-.meta {
-  font-size: 0.85rem;
-  color: rgb(var(--v-theme-secondary));
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
-.empty {
-  font-size: 0.95rem;
-  color: rgb(var(--v-theme-secondary));
 }
 </style>

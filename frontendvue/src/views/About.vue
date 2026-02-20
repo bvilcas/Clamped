@@ -2,15 +2,15 @@
 </script>
 
 <template>
-  <v-container style="max-width: 800px;" class="pa-8">
-    <h1 class="text-info" style="margin-bottom: 1rem;">About Clamped!</h1>
-    <p style="margin-bottom: 2rem">
+  <v-container class="pa-8">
+    <h1 class="text-info mb-4">About Clamped!</h1>
+    <p class="mb-8">
       Clamped! is a secure vulnerability tracking system built to help small teams
       and organizations manage, report, and resolve software vulnerabilities.
     </p>
 
     <v-card variant="elevated" elevation="2" class="about-card">
-      <h2 style="margin-bottom: 0.6rem;">Mission</h2>
+      <h2 class="card-title">Mission</h2>
       <p class="text-body-1">
         Our goal is to make vulnerability tracking accessible and reliable,
         combining modern security with a user-friendly dashboard.
@@ -19,7 +19,7 @@
     </v-card>
 
     <v-card variant="elevated" elevation="2" class="about-card">
-      <h2 style="margin-bottom: 0.6rem;">Features</h2>
+      <h2 class="card-title">Features</h2>
       <ul class="features-list">
         <li>Report vulnerabilities and assign them to team members.</li>
         <li>Track status, severity, and deadlines for every issue.</li>
@@ -30,8 +30,8 @@
     </v-card>
 
     <v-card variant="elevated" elevation="2" class="about-card">
-      <h2 style="margin-bottom: 0.6rem;">Who We Serve</h2>
-      <p class="text-body-1" style="line-height: 1.6;">
+      <h2 class="card-title">Who We Serve</h2>
+      <p class="text-body-1">
         Clamped! is tailored for smaller teams, defense projects, and
         organizations who need a lightweight but powerful way to stay on top
         of security risks.
@@ -44,6 +44,10 @@
 .about-card {
   margin-bottom: 2rem;
   padding: 1rem 1.5rem;
+}
+
+.card-title {
+  margin-bottom: 0.6rem;
 }
 
 .features-list {

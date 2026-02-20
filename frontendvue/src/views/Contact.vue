@@ -19,8 +19,8 @@ function handleSubmit() {
 </script>
 
 <template>
-    <v-container class="contact-page">
-        <h1>Contact Us</h1>
+    <v-container class="pa-8">
+        <h1 class="text-info mb-4">Contact Us</h1>
         <p class="intro">
             Have questions, feedback, or need support with Clamped?
             We’d love to hear from you.
@@ -37,7 +37,7 @@ function handleSubmit() {
 
             <v-textarea label="Message" rows="5" v-model="form.message" required />
 
-            <v-btn type="submit" color="primary">
+            <v-btn type="submit" color="info">
                 Send Message
             </v-btn>
         </v-form>
@@ -45,23 +45,9 @@ function handleSubmit() {
 </template>
 
 <style scoped>
-.contact-page {
-    padding: 2rem;
-    max-width: 700px;
-    margin: 0 auto;
-    font-family: Arial, sans-serif;
-    color: rgb(var(--v-theme-on-surface));
-    line-height: 1.6;
-}
-
-.contact-page h1 {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-    color: rgb(var(--v-theme-info));
-}
 
 .intro {
     margin-bottom: 1.5rem;
-    color: rgb(var(--v-theme-on-surface-variant));
 }
+
 </style>

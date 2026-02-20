@@ -18,16 +18,15 @@ const { sidebarVisible, toggleSidebar } = useSidebar()
 <template>
   <header class="topbar">
     <!-- LEFT -->
-    <div class="topbar-left">
+    <div class="d-flex align-center ga-3">
       <v-btn
         v-show="!sidebarVisible"
+        icon="mdi-menu"
         variant="text"
         size="small"
         class="sidebar-toggle"
         @click="toggleSidebar"
-      >
-        ☰
-      </v-btn>
+      />
       <v-text-field
         variant="outlined"
         density="compact"
@@ -38,13 +37,11 @@ const { sidebarVisible, toggleSidebar } = useSidebar()
     </div>
 
     <!-- RIGHT -->
-    <div class="topbar-right">
-      <v-btn icon variant="text" size="small">
-        🔔
-      </v-btn>
+    <div class="d-flex align-center ga-4">
+      <v-btn icon="mdi-bell-outline" variant="text" size="small" />
 
       <template v-if="user">
-        <div class="profile">
+        <div class="d-flex align-center ga-2">
           <span class="avatar">
             {{ user.firstname[0] }}{{ user.lastname[0] }}
           </span>
@@ -55,19 +52,17 @@ const { sidebarVisible, toggleSidebar } = useSidebar()
 
         <v-menu v-model="menuOpen" location="bottom end">
           <template #activator="{ props }">
-            <v-btn icon variant="text" size="small" v-bind="props">
-              ⚙️
-            </v-btn>
+            <v-btn icon="mdi-cog-outline" variant="text" size="small" v-bind="props" />
           </template>
 
           <v-list>
-            <v-list-item @click="menuOpen = false; router.push('/profile')">
+            <v-list-item prepend-icon="mdi-account-outline" @click="menuOpen = false; router.push('/profile')">
               Profile
             </v-list-item>
-            <v-list-item @click="menuOpen = false; router.push('/settings')">
+            <v-list-item prepend-icon="mdi-cog-outline" @click="menuOpen = false; router.push('/settings')">
               Settings
             </v-list-item>
-            <v-list-item @click="menuOpen = false; authStore.logout()">
+            <v-list-item prepend-icon="mdi-logout" @click="menuOpen = false; authStore.logout()">
               Logout
             </v-list-item>
           </v-list>
@@ -90,36 +85,12 @@ const { sidebarVisible, toggleSidebar } = useSidebar()
   z-index: 100;
 }
 
-.topbar-left {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
 .sidebar-toggle {
-  min-width: unset !important;
-  width: 36px !important;
-  height: 36px !important;
-  font-size: 1.2rem !important;
-  text-transform: none !important;
-  letter-spacing: normal !important;
   color: rgb(var(--v-theme-on-surface)) !important;
 }
 
 .topbar-search {
   width: 600px;
-}
-
-.topbar-right {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.profile {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
 }
 
 .avatar {
@@ -134,6 +105,7 @@ const { sidebarVisible, toggleSidebar } = useSidebar()
 .name {
   font-size: 0.9rem;
 }
+
 .topbar :deep(.v-btn--variant-text > .v-btn__overlay) { opacity: 0 !important; }
 .topbar :deep(.v-ripple__container) { color: rgb(var(--v-theme-nav-action)); }
 .topbar :deep(.v-ripple__animation) { opacity: 0.18 !important; }
