@@ -345,10 +345,7 @@ const handleChangeMemberRole = async (userId: string, currentRole: string) => {
 
           <div class="project-actions">
             <template v-if="role === 'LEAD'">
-              <v-btn
-                color="success"
-                @click="router.push(`/project/update/${projectId}`)"
-              >
+              <v-btn color="success" @click="router.push(`/project/update/${projectId}`)">
                 Update Project
               </v-btn>
               <v-btn color="error" @click="handleDeleteProject">
@@ -370,22 +367,15 @@ const handleChangeMemberRole = async (userId: string, currentRole: string) => {
           <div class="section-card tall-card">
             <h2>Vulnerabilities</h2>
 
-            <v-btn
-              color="info"
-              class="mb-4"
-              @click="showReportForm = !showReportForm"
-            >
+            <v-btn color="info" class="mb-4" @click="showReportForm = !showReportForm">
               + Report Vulnerability
             </v-btn>
 
             <div v-if="showReportForm" class="report-section">
-              <Report
-                :project-id="projectId"
-                :on-success="() => {
-                  loadVulnerabilities()
-                  showReportForm = false
-                }"
-              />
+              <Report :project-id="projectId" :on-success="() => {
+                loadVulnerabilities()
+                showReportForm = false
+              }" />
             </div>
 
             <p v-if="loadingVulns" style="margin-top: 10px">Loading vulnerabilities...</p>
@@ -408,31 +398,15 @@ const handleChangeMemberRole = async (userId: string, currentRole: string) => {
                 </div>
 
                 <div class="vuln-actions">
-                  <v-btn
-                    size="small"
-                    variant="tonal"
-                    color="grey"
-                    @click="handleStatusChange(v.id, 'PATCHED')"
-                  >
+                  <v-btn size="small" color="nav" @click="handleStatusChange(v.id, 'PATCHED')">
                     Patch
                   </v-btn>
 
-                  <v-btn
-                    size="small"
-                    variant="tonal"
-                    color="grey"
-                    @click="handleStatusChange(v.id, 'VERIFIED')"
-                  >
+                  <v-btn size="small" color="nav" @click="handleStatusChange(v.id, 'VERIFIED')">
                     Verify
                   </v-btn>
 
-                  <v-btn
-                    v-if="role === 'LEAD'"
-                    size="small"
-                    variant="tonal"
-                    color="grey"
-                    @click="handleDeleteVulnerability(v.id)"
-                  >
+                  <v-btn v-if="role === 'LEAD'" size="small" color="nav" @click="handleDeleteVulnerability(v.id)">
                     Delete
                   </v-btn>
                 </div>
@@ -454,21 +428,11 @@ const handleChangeMemberRole = async (userId: string, currentRole: string) => {
                 </div>
 
                 <div v-if="role === 'LEAD'" class="member-actions">
-                  <v-btn
-                    size="small"
-                    variant="tonal"
-                    color="blue"
-                    @click="handleChangeMemberRole(m.id, m.projectRole)"
-                  >
+                  <v-btn size="small" color="nav" @click="handleChangeMemberRole(m.id, m.projectRole)">
                     Change Role
                   </v-btn>
 
-                  <v-btn
-                    size="small"
-                    variant="tonal"
-                    color="red"
-                    @click="handleRemoveMember(m.id)"
-                  >
+                  <v-btn size="small" color="nav" @click="handleRemoveMember(m.id)">
                     Remove
                   </v-btn>
                 </div>
@@ -482,46 +446,24 @@ const handleChangeMemberRole = async (userId: string, currentRole: string) => {
               <h3 style="margin-top: 14px">Add Member</h3>
 
               <div class="add-member-row">
-                <v-text-field
-                  v-model="newMemberUserId"
-                  label="User ID"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  class="member-input"
-                />
+                <v-text-field v-model="newMemberUserId" label="User ID" variant="outlined" density="compact"
+                  hide-details class="member-input" />
 
-                <v-select
-                  v-model="newMemberRole"
-                  :items="memberRoleItems"
-                  label="Role"
-                  variant="outlined"
-                  density="compact"
-                  hide-details
-                  class="member-input"
-                />
+                <v-select v-model="newMemberRole" :items="memberRoleItems" label="Role" variant="outlined"
+                  density="compact" hide-details class="member-input" />
+
+                <v-btn color="info" class="mt-3 mb-4" @click="handleAddMember" :disabled="memberActionLoading">
+                  {{ memberActionLoading ? 'Adding...' : 'Add Member' }}
+                </v-btn>
               </div>
-
-              <v-btn
-                color="info"
-                class="mt-3 mb-4"
-                @click="handleAddMember"
-                :disabled="memberActionLoading"
-              >
-                {{ memberActionLoading ? 'Adding...' : 'Add Member' }}
-              </v-btn>
             </template>
           </div>
 
           <!-- ASSIGNMENTS -->
           <div class="section-card">
             <h2>Assignments</h2>
-            <p>View, self-assign, and manage vulnerability roles.</p>
-            <v-btn
-              color="info"
-              class="mt-2"
-              @click="handleOpenAssignments"
-            >
+            <p class="mb-">View, self-assign, and manage vulnerability roles.</p>
+            <v-btn color="info" @click="handleOpenAssignments">
               Open Assignments
             </v-btn>
           </div>
@@ -714,21 +656,50 @@ const handleChangeMemberRole = async (userId: string, currentRole: string) => {
   font-weight: bold;
 }
 
-.severity.low { background: rgb(var(--v-theme-severity-low)); color: rgb(var(--v-theme-on-severity-low)); }
-.severity.medium { background: rgb(var(--v-theme-severity-medium)); color: rgb(var(--v-theme-on-severity-medium)); }
-.severity.high { background: rgb(var(--v-theme-severity-high)); color: rgb(var(--v-theme-on-severity-high)); }
-.severity.critical { background: rgb(var(--v-theme-severity-critical)); color: rgb(var(--v-theme-on-severity-critical)); }
+.severity.low {
+  background: rgb(var(--v-theme-severity-low));
+  color: rgb(var(--v-theme-on-severity-low));
+}
+
+.severity.medium {
+  background: rgb(var(--v-theme-severity-medium));
+  color: rgb(var(--v-theme-on-severity-medium));
+}
+
+.severity.high {
+  background: rgb(var(--v-theme-severity-high));
+  color: rgb(var(--v-theme-on-severity-high));
+}
+
+.severity.critical {
+  background: rgb(var(--v-theme-severity-critical));
+  color: rgb(var(--v-theme-on-severity-critical));
+}
 
 .status {
   font-weight: bold;
   text-transform: uppercase;
 }
 
-.status.reported { color: rgb(var(--v-theme-info)); }
-.status.in_progress { color: rgb(var(--v-theme-status-in-progress)); }
-.status.patched { color: rgb(var(--v-theme-status-patched)); }
-.status.verified { color: rgb(var(--v-theme-status-verified)); }
-.status.under_review { color: rgb(var(--v-theme-warning)); }
+.status.reported {
+  color: rgb(var(--v-theme-info));
+}
+
+.status.in_progress {
+  color: rgb(var(--v-theme-status-in-progress));
+}
+
+.status.patched {
+  color: rgb(var(--v-theme-status-patched));
+}
+
+.status.verified {
+  color: rgb(var(--v-theme-status-verified));
+}
+
+.status.under_review {
+  color: rgb(var(--v-theme-warning));
+}
 
 .vuln-actions {
   margin-top: 8px;
@@ -745,5 +716,4 @@ const handleChangeMemberRole = async (userId: string, currentRole: string) => {
 .report-section textarea {
   margin: 6px 0 !important;
 }
-
 </style>

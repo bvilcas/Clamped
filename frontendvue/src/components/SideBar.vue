@@ -136,10 +136,6 @@ const isAboutActive = computed(() => route.path.startsWith("/about"))
   margin-bottom: 0.3rem;
 }
 
-/* Overriding of Vuetify Behavior (for no-background button) */
-.nav-item :deep(.v-btn__overlay) { opacity: 0 !important; }
-.nav-item :deep(.v-ripple__animation) { opacity: 0.08 !important; }
-.nav-item:hover { background-color: rgba(var(--v-theme-on-surface), 0.12) !important; }
 .nav-item.nav-item-active { background-color: rgba(var(--v-theme-on-surface), 0.20) !important; }
 
 .sidebar-footer {

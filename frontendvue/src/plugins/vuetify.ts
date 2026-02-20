@@ -39,6 +39,7 @@ export const vuetify = createVuetify({
           'status-patched': '#16a34a',
           'status-verified': '#7c3aed',
           ...severityColors,
+          nav: '#e7e7e7',
         },
       },
       dark: {
@@ -51,7 +52,8 @@ export const vuetify = createVuetify({
           info: '#60a5fa',
           warning: '#f59e0b',
           background: '#0b1220',
-
+          grey: '#334155',
+          'on-grey': '#e5e7eb',
           surface: '#1e293b',
           'surface-light': '#172032',
           'surface-variant': '#172032',
@@ -66,6 +68,7 @@ export const vuetify = createVuetify({
           'status-patched': '#4ade80',
           'status-verified': '#a78bfa',
           ...severityColors,
+          nav: '#1f2933',
         },
       },
     },
