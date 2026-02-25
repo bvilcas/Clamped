@@ -10,6 +10,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.List;
 
 // Responsible for user account management
 // Session killing should be instant (dealt with in the front; refresh tokens being revoked in the back end is all I can do for now)
@@ -116,5 +117,32 @@ public class UserService {
         user.setCredentialsChangedAt(Instant.now());
 
         userRepository.save(user);
+    }
+
+    @Transactional
+    public boolean setEmailNotifications(boolean enabled, Authentication authentication) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        User user = userRepository.findById(principal.getId())
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        user.setEmailNotificationsEnabled(enabled);
+        userRepository.save(user);
+        return enabled;
+    }
+
+    @Transactional(readOnly = true)
+    public boolean getEmailNotifications(Authentication authentication) {
+        UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
+        return userRepository.findById(principal.getId())
+                .map(User::isEmailNotificationsEnabled)
+                .orElse(false);
+    }
+
+    @Transactional(readOnly = true)
+    public List<UserSearchResult> searchByEmail(String query) {
+        if (query == null || query.isBlank() || query.length() < 2) return List.of();
+        return userRepository.findTop10ByEmailContainingIgnoreCase(query)
+                .stream()
+                .map(u -> new UserSearchResult(u.getId(), u.getEmail(), u.getFirstname(), u.getLastname()))
+                .toList();
     }
 }

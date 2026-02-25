@@ -59,7 +59,7 @@ const handleSubmit = async () => {
 <template>
   <p v-if="loading">Loading...</p>
   <div v-else class="update-project-container">
-    <h1>Edit Project</h1>
+    <h1 class="text-info mb-6">Edit Project</h1>
 
     <v-alert v-if="success" type="success" density="compact" class="mb-4">
       Project updated successfully!

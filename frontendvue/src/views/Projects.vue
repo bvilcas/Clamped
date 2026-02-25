@@ -50,12 +50,12 @@ onMounted(async () => {
         <v-card
           variant="elevated"
           elevation="2"
-          class="project-card"
+          class="project-card h-100"
           @click="router.push(`/project/${p.id}`)"
         >
           <v-card-title>{{ p.name }}</v-card-title>
           <v-card-text>
-            <p class="text-on-surface-variant mb-2">{{ p.description || 'No description provided.' }}</p>
+            <p class="desc text-on-surface-variant mb-2">{{ p.description || 'No description provided.' }}</p>
             <div class="text-secondary text-caption">
               <div><strong>Role:</strong> {{ p.myRole }}</div>
               <div v-if="p.createdAt"><strong>Created:</strong> {{ new Date(p.createdAt).toLocaleDateString() }}</div>
@@ -75,5 +75,13 @@ onMounted(async () => {
 
 .project-card:hover {
   transform: translateY(-3px);
+}
+
+.desc {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 </style>

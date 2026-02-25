@@ -117,7 +117,7 @@ const handlePasswordChange = async () => {
           <v-form @submit.prevent="handlePasswordChange" class="d-flex flex-column ga-2">
             <v-text-field v-model="passwordForm.oldPassword" label="Old Password" type="password" variant="outlined" density="comfortable" />
             <v-text-field v-model="passwordForm.newPassword" label="New Password" type="password" variant="outlined" density="comfortable" />
-            <div><v-btn type="submit" color="error">Change Password</v-btn></div>
+            <div><v-btn type="submit" color="info">Change Password</v-btn></div>
           </v-form>
         </v-card-text>
       </v-card>

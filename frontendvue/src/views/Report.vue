@@ -3,6 +3,8 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchWithAuth } from '@/utils/fetchWithAuth'
 import { useAuthStore } from '@/stores/auth'
+import CodeSnippetEditor from '@/components/CodeSnippetEditor.vue'
+
 const props = defineProps<{
   projectId?: string
   onSuccess?: () => void
@@ -31,10 +33,24 @@ const form = reactive({
   dueAt: '',
   repository: '',
   commitHash: '',
+  codeSnippet: '',
+  codeLanguage: 'plaintext',
 })
 
 const error = ref('')
 const success = ref('')
+
+// CVE lookup state
+const cveLoading = ref(false)
+const cveError = ref('')
+interface CveInfo {
+  description: string | null
+  cvssScore: number | null
+  cvssVector: string | null
+  severity: string | null
+  cweId: string | null
+}
+const cveInfo = ref<CveInfo | null>(null)
 
 onMounted(async () => {
   if (!resolvedProjectId.value) {
@@ -53,6 +69,42 @@ onMounted(async () => {
   }
 })
 
+async function lookupCve() {
+  const id = form.cveId.trim()
+  if (!id) return
+  cveLoading.value = true
+  cveError.value = ''
+  cveInfo.value = null
+
+  try {
+    const res = await fetchWithAuth(`http://localhost:8080/api/v1/cve?id=${encodeURIComponent(id)}`)
+    const data = await res.json()
+    if (res.ok && data.success) {
+      const d = data.data
+      cveInfo.value = {
+        description: d.description,
+        cvssScore: d.cvssScore,
+        cvssVector: d.cvssVector,
+        severity: d.severity,
+        cweId: d.cweId,
+      }
+      // Auto-fill CWE and severity if currently empty
+      if (!form.cweId && d.cweId) form.cweId = d.cweId
+      if (!form.severity && d.severity) {
+        const match = severityItems.find(s => s.value === d.severity.toUpperCase())
+        if (match) form.severity = match.value
+      }
+      if (!form.description && d.description) form.description = d.description
+    } else {
+      cveError.value = data.message || 'CVE not found'
+    }
+  } catch {
+    cveError.value = 'Failed to reach NVD API'
+  } finally {
+    cveLoading.value = false
+  }
+}
+
 const handleSubmit = async () => {
   error.value = ''
   success.value = ''
@@ -68,10 +120,9 @@ const handleSubmit = async () => {
       dueAt: form.dueAt
         ? new Date(form.dueAt + 'T00:00:00').toISOString()
         : null,
+      codeSnippet: form.codeSnippet || null,
+      codeLanguage: form.codeSnippet ? form.codeLanguage : null,
     }
-
-    console.log('Sending payload:', payload)
-    console.log('Sending token:', localStorage.getItem('accessToken'))
 
     const res = await fetchWithAuth(
       `http://localhost:8080/api/v1/vulnerabilities/report/${resolvedProjectId.value}`,
@@ -95,6 +146,10 @@ const handleSubmit = async () => {
       form.dueAt = ''
       form.repository = ''
       form.commitHash = ''
+      form.codeSnippet = ''
+      form.codeLanguage = 'plaintext'
+      cveInfo.value = null
+      cveError.value = ''
       if (props.onSuccess) props.onSuccess()
     } else {
       const data = await res.json()
@@ -127,10 +182,19 @@ const statusItems = [
 const projectItems = computed(() =>
   projects.value.map(p => ({ title: p.name, value: p.id }))
 )
+
+const cvssColor = computed(() => {
+  const score = cveInfo.value?.cvssScore
+  if (score === null || score === undefined) return 'grey'
+  if (score >= 9) return 'error'
+  if (score >= 7) return 'orange'
+  if (score >= 4) return 'warning'
+  return 'success'
+})
 </script>
 
 <template>
-  <v-form @submit.prevent="handleSubmit" class="report-form">
+  <v-form @submit.prevent="handleSubmit" class="report-form mt-14">
 
     <!-- PROJECT DROPDOWN (ONLY WHEN NOT PRESELECTED) -->
     <v-select
@@ -158,12 +222,64 @@ const projectItems = computed(() =>
       density="comfortable"
     />
 
-    <v-text-field
-      v-model="form.cveId"
-      label="CVE ID (Optional)"
-      variant="outlined"
-      density="comfortable"
-    />
+    <!-- CVE ID with lookup button -->
+    <div class="d-flex gap-2 align-start mb-1">
+      <v-text-field
+        v-model="form.cveId"
+        label="CVE ID (Optional)"
+        placeholder="e.g. CVE-2021-44228"
+        variant="outlined"
+        density="comfortable"
+        hide-details
+        class="flex-grow-1"
+      />
+      <v-btn
+        variant="outlined"
+        color="info"
+        :loading="cveLoading"
+        :disabled="!form.cveId.trim()"
+        style="height: 48px; margin-top: 0"
+        @click="lookupCve"
+      >
+        Lookup
+      </v-btn>
+    </div>
+
+    <!-- CVE enrichment card -->
+    <v-expand-transition>
+      <v-card
+        v-if="cveInfo"
+        variant="tonal"
+        color="info"
+        class="mb-3 pa-3"
+        density="compact"
+      >
+        <div class="d-flex align-center justify-space-between mb-1">
+          <span class="text-caption text-medium-emphasis">NVD Data</span>
+          <v-chip
+            v-if="cveInfo.cvssScore !== null"
+            :color="cvssColor"
+            size="small"
+            label
+          >
+            CVSS {{ cveInfo.cvssScore?.toFixed(1) }}
+          </v-chip>
+        </div>
+        <div v-if="cveInfo.description" class="text-body-2 mb-1">
+          {{ cveInfo.description }}
+        </div>
+        <div class="d-flex flex-wrap gap-2 mt-1">
+          <v-chip v-if="cveInfo.cweId" size="x-small" variant="outlined">{{ cveInfo.cweId }}</v-chip>
+          <v-chip v-if="cveInfo.cvssVector" size="x-small" variant="outlined" class="text-mono">
+            {{ cveInfo.cvssVector }}
+          </v-chip>
+        </div>
+      </v-card>
+    </v-expand-transition>
+
+    <v-alert v-if="cveError" type="warning" density="compact" class="mb-3" closable @click:close="cveError = ''">
+      {{ cveError }}
+    </v-alert>
 
     <v-text-field
       v-model="form.cweId"
@@ -213,9 +329,19 @@ const projectItems = computed(() =>
       density="comfortable"
     />
 
+    <!-- Code Snippet Editor -->
+    <div class="mb-4">
+      <div class="text-body-2 text-medium-emphasis mb-2">Code Snippet (Optional)</div>
+      <CodeSnippetEditor
+        v-model="form.codeSnippet"
+        v-model:language="form.codeLanguage"
+        height="220px"
+      />
+    </div>
+
     <v-btn
       type="submit"
-      color="primary"
+      color="info"
       block
       size="large"
       class="mt-2"
@@ -234,12 +360,16 @@ const projectItems = computed(() =>
 
 <style scoped>
 .report-form {
-  max-width: 400px;
+  max-width: 560px;
   margin: 100px auto;
   padding: 30px;
   background-color: rgb(var(--v-theme-surface-variant));
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   font-family: Arial, sans-serif;
+}
+
+.text-mono {
+  font-family: monospace;
 }
 </style>

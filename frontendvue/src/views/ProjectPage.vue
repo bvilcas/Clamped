@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { fetchWithAuth } from '@/utils/fetchWithAuth'
 import { useAuthStore } from '@/stores/auth'
@@ -37,9 +37,49 @@ const members = ref<Member[]>([])
 const vulnerabilities = ref<Vulnerability[]>([])
 const loadingVulns = ref(true)
 const showReportForm = ref(false)
-const newMemberUserId = ref('')
 const newMemberRole = ref('')
 const memberActionLoading = ref(false)
+
+interface UserSuggestion { id: number; email: string; firstname: string; lastname: string }
+const emailQuery = ref('')
+const emailSuggestions = ref<UserSuggestion[]>([])
+const selectedUser = ref<UserSuggestion | null>(null)
+const emailSearchLoading = ref(false)
+let emailSearchTimer: ReturnType<typeof setTimeout> | null = null
+
+const clearEmailSelection = () => {
+  selectedUser.value = null
+  emailSuggestions.value = []
+  emailQuery.value = ''
+}
+
+const selectUser = (u: UserSuggestion) => {
+  selectedUser.value = u
+  emailSuggestions.value = []
+  emailQuery.value = u.email
+}
+
+watch(emailQuery, (query) => {
+  if (selectedUser.value) return
+  if (emailSearchTimer) clearTimeout(emailSearchTimer)
+  if (!query || query.length < 2) { emailSuggestions.value = []; return }
+  emailSearchTimer = setTimeout(async () => {
+    emailSearchLoading.value = true
+    try {
+      const res = await fetchWithAuth(
+        `http://localhost:8080/api/v1/users/search?email=${encodeURIComponent(query)}`
+      )
+      if (res.ok) {
+        const data = await res.json()
+        emailSuggestions.value = data.data || []
+      }
+    } catch (err) {
+      console.error('User search failed:', err)
+    } finally {
+      emailSearchLoading.value = false
+    }
+  }, 300)
+})
 const role = ref('')
 
 const memberRoleItems = [
@@ -48,15 +88,15 @@ const memberRoleItems = [
   { title: 'Lead', value: 'LEAD' },
 ]
 
+const severityClass = (s: string) => `severity-${s.toLowerCase()}`
+const statusClass = (s: string) => `status-${s.toLowerCase()}`
+
 const loadProject = async () => {
   try {
     const res = await fetchWithAuth(
       `http://localhost:8080/api/v1/userprojects/${projectId}`
     )
-    if (!res.ok) {
-      authStore.logout()
-      return
-    }
+    if (!res.ok) { authStore.logout(); return }
     const data = await res.json()
     project.value = data.data
     role.value = data.data.myRole
@@ -105,12 +145,7 @@ const handleSelfRemove = async () => {
       { method: 'POST' }
     )
     const data = await res.json()
-
-    if (data.data?.requiresConfirmation) {
-      alert(data.data.message)
-      return
-    }
-
+    if (data.data?.requiresConfirmation) { alert(data.data.message); return }
     await fetchWithAuth(
       `http://localhost:8080/api/v1/userprojects/self-remove/${projectId}`,
       { method: 'DELETE' }
@@ -122,11 +157,8 @@ const handleSelfRemove = async () => {
 }
 
 const handleDeleteProject = async () => {
-  const confirmed = window.confirm(
-    'Are you sure? This will permanently delete the entire project.'
-  )
+  const confirmed = window.confirm('Are you sure? This will permanently delete the entire project.')
   if (!confirmed) return
-
   try {
     await fetchWithAuth(
       `http://localhost:8080/api/v1/projects/delete/${projectId}`,
@@ -141,22 +173,15 @@ const handleDeleteProject = async () => {
 const handleDeleteVulnerability = async (vulnerabilityId: string) => {
   const confirmed = window.confirm('Delete this vulnerability?')
   if (!confirmed) return
-
   try {
     const res = await fetchWithAuth(
       `http://localhost:8080/api/v1/vulnerabilities/delete/${projectId}/${vulnerabilityId}`,
       { method: 'DELETE' }
     )
-    if (!res.ok) {
-      const data = await res.json()
-      alert(data.message || 'Failed to delete vulnerability.')
-      return
-    }
+    if (!res.ok) { const data = await res.json(); alert(data.message || 'Failed to delete vulnerability.'); return }
     loadVulnerabilities()
   } catch (err: unknown) {
-    if (err instanceof Error) {
-      console.error('Delete vulnerability failed:', err.message)
-    }
+    if (err instanceof Error) console.error('Delete vulnerability failed:', err.message)
     alert('Network or authentication error while deleting.')
     authStore.logout()
   }
@@ -169,71 +194,46 @@ const handleStatusChange = async (vulnerabilityId: string, newStatus: string) =>
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectId,
-          vulnerabilityId,
-          status: newStatus
-        })
+        body: JSON.stringify({ projectId, vulnId: vulnerabilityId, newStatus })
       }
     )
-    if (!res.ok) {
-      const data = await res.json()
-      alert(data.message || 'Failed to update vulnerability status.')
-      return
-    }
+    if (!res.ok) { const data = await res.json(); alert(data.message || 'Failed to update vulnerability status.'); return }
     loadVulnerabilities()
   } catch (err: unknown) {
-    if (err instanceof Error) {
-      console.error('Status change failed:', err.message)
-    }
+    if (err instanceof Error) console.error('Status change failed:', err.message)
     alert('Network or authentication error while updating status.')
     authStore.logout()
   }
 }
 
 const handleAddMember = async () => {
-  if (!newMemberUserId.value) {
-    alert('Enter a user ID.')
-    return
-  }
-
+  if (!selectedUser.value) { alert('Select a user by searching their email.'); return }
+  if (!newMemberRole.value) { alert('Select a role.'); return }
   try {
     memberActionLoading.value = true
-
     const res = await fetchWithAuth(
       'http://localhost:8080/api/v1/userprojects/members/add',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectId,
-          userId: newMemberUserId.value,
-          role: newMemberRole.value
-        })
+        body: JSON.stringify({ projectId, userId: selectedUser.value.id, role: newMemberRole.value })
       }
     )
-
     const data = await res.json()
-
     if (data.data?.requiresConfirmation) {
       const confirmed = window.confirm(data.data.message)
       if (!confirmed) return
-
       await fetchWithAuth(
         'http://localhost:8080/api/v1/userprojects/members/add',
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            projectId,
-            userId: newMemberUserId.value,
-            role: newMemberRole.value
-          })
+          body: JSON.stringify({ projectId, userId: selectedUser.value.id, role: newMemberRole.value })
         }
       )
     }
-
-    newMemberUserId.value = ''
+    selectedUser.value = null
+    emailSuggestions.value = []
     newMemberRole.value = 'TESTER'
     loadMembers()
   } catch (err) {
@@ -247,29 +247,17 @@ const handleRemoveMember = async (userId: string) => {
   try {
     const validateRes = await fetchWithAuth(
       'http://localhost:8080/api/v1/userprojects/members/remove/validate',
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, userId })
-      }
+      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId, userId }) }
     )
-
     const validateData = await validateRes.json()
-
     if (validateData.data?.requiresConfirmation) {
       const confirmed = window.confirm(validateData.data.message)
       if (!confirmed) return
     }
-
     await fetchWithAuth(
       'http://localhost:8080/api/v1/userprojects/members/remove',
-      {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, userId })
-      }
+      { method: 'DELETE', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId, userId }) }
     )
-
     loadMembers()
   } catch (err) {
     alert('Failed to remove member.')
@@ -277,42 +265,35 @@ const handleRemoveMember = async (userId: string) => {
 }
 
 const handleOpenAssignments = () => {
-  window.alert('Coming soon!')
+  router.push(`/project/${projectId}/assignments`)
 }
 
-const handleChangeMemberRole = async (userId: string, currentRole: string) => {
-  let nextRole: string
+const roleDialog = ref({ open: false, memberId: '', memberName: '', currentRole: '', newRole: '' })
 
-  if (currentRole === 'TESTER') nextRole = 'PROGRAMMER'
-  else if (currentRole === 'PROGRAMMER') nextRole = 'LEAD'
-  else if (currentRole === 'LEAD') nextRole = 'PROGRAMMER'
-  else nextRole = 'PROGRAMMER'
+const openRoleDialog = (m: Member) => {
+  roleDialog.value = {
+    open: true,
+    memberId: m.id,
+    memberName: `${m.firstname} ${m.lastname}`,
+    currentRole: m.projectRole,
+    newRole: m.projectRole,
+  }
+}
 
-  const confirmed = window.confirm(
-    `Change user role from ${currentRole} → ${nextRole}?`
-  )
-  if (!confirmed) return
-
+const confirmRoleChange = async () => {
+  const { memberId, newRole, currentRole } = roleDialog.value
+  if (newRole === currentRole) { roleDialog.value.open = false; return }
   try {
     const res = await fetchWithAuth(
       'http://localhost:8080/api/v1/userprojects/change',
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectId,
-          userId,
-          newRole: nextRole
-        })
+        body: JSON.stringify({ projectId, userId: memberId, newRole })
       }
     )
-
-    if (!res.ok) {
-      const data = await res.json()
-      alert(data.message || 'Failed to update role.')
-      return
-    }
-
+    if (!res.ok) { const data = await res.json(); alert(data.message || 'Failed to update role.'); return }
+    roleDialog.value.open = false
     loadMembers()
   } catch (err) {
     alert('Failed to update role.')
@@ -321,399 +302,194 @@ const handleChangeMemberRole = async (userId: string, currentRole: string) => {
 </script>
 
 <template>
-  <p v-if="!project">Loading...</p>
-  <template v-else>
-    <div class="project-container-wide">
-      <!-- HEADER ROW -->
-      <div class="project-header-wide">
-        <div class="project-title-group">
-          <h1>{{ project.name }}</h1>
-          <p class="project-description">
-            {{ project.description || 'No description provided.' }}
-          </p>
-          <div class="timestamps">
+  <v-container class="pa-8">
+    <p v-if="!project" class="text-secondary">Loading...</p>
+
+    <template v-else>
+      <!-- Header -->
+      <div class="d-flex justify-space-between align-start mb-6">
+        <div>
+          <h1 class="text-info mb-1">{{ project.name }}</h1>
+          <p class="text-secondary mb-2">{{ project.description || 'No description provided.' }}</p>
+          <div class="d-flex ga-4 text-secondary text-caption">
             <span>Created: {{ new Date(project.createdAt).toLocaleDateString() }}</span>
-            <span>
-              Last Updated:
-              {{ project.updatedAt ? new Date(project.updatedAt).toLocaleDateString() : '—' }}
-            </span>
+            <span>Last Updated: {{ project.updatedAt ? new Date(project.updatedAt).toLocaleDateString() : '—' }}</span>
           </div>
         </div>
-
-        <div class="project-meta-actions">
-          <div class="role-badge">My Role: {{ role }}</div>
-
-          <div class="project-actions">
+        <div class="d-flex flex-column align-end ga-2">
+          <v-chip variant="outlined" color="secondary">My Role: {{ role }}</v-chip>
+          <div class="d-flex ga-2">
             <template v-if="role === 'LEAD'">
-              <v-btn color="success" @click="router.push(`/project/update/${projectId}`)">
-                Update Project
-              </v-btn>
-              <v-btn color="error" @click="handleDeleteProject">
-                Delete Project
-              </v-btn>
+              <v-btn color="info" @click="router.push(`/project/update/${projectId}`)">Update Project</v-btn>
+              <v-btn color="error" @click="handleDeleteProject">Delete Project</v-btn>
             </template>
-
-            <v-btn color="leave" @click="handleSelfRemove">
-              Leave Project
-            </v-btn>
+            <v-btn color="error" variant="outlined" @click="handleSelfRemove">Leave Project</v-btn>
           </div>
         </div>
       </div>
 
-      <!-- MAIN GRID -->
-      <div class="project-grid-2col">
-        <!-- LEFT COLUMN (VULNERABILITIES) -->
-        <div class="left-column">
-          <div class="section-card tall-card">
-            <h2>Vulnerabilities</h2>
-
-            <v-btn color="info" class="mb-4" @click="showReportForm = !showReportForm">
-              + Report Vulnerability
-            </v-btn>
-
-            <div v-if="showReportForm" class="report-section">
-              <Report :project-id="projectId" :on-success="() => {
-                loadVulnerabilities()
-                showReportForm = false
-              }" />
-            </div>
-
-            <p v-if="loadingVulns" style="margin-top: 10px">Loading vulnerabilities...</p>
-            <p v-else-if="vulnerabilities.length === 0" style="margin-top: 10px; color: rgb(var(--v-theme-secondary))">
-              No vulnerabilities reported yet.
-            </p>
-            <ul v-else class="vuln-list">
-              <li v-for="v in vulnerabilities" :key="v.id" class="vuln-card">
-                <div class="vuln-main">
-                  <strong>{{ v.title }}</strong>
-                  <span :class="['severity', v.severity.toLowerCase()]">
-                    {{ v.severity }}
-                  </span>
-                </div>
-
-                <div class="vuln-sub">
-                  <span :class="['status', v.status.toLowerCase()]">
-                    {{ v.status }}
-                  </span>
-                </div>
-
-                <div class="vuln-actions">
-                  <v-btn size="small" color="nav" @click="handleStatusChange(v.id, 'PATCHED')">
-                    Patch
-                  </v-btn>
-
-                  <v-btn size="small" color="nav" @click="handleStatusChange(v.id, 'VERIFIED')">
-                    Verify
-                  </v-btn>
-
-                  <v-btn v-if="role === 'LEAD'" size="small" color="nav" @click="handleDeleteVulnerability(v.id)">
-                    Delete
-                  </v-btn>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-
-        <!-- RIGHT COLUMN (STACKED) -->
-        <div class="right-column">
-          <!-- MEMBERS -->
-          <div class="section-card">
-            <h2>Project Members</h2>
-
-            <ul class="member-list">
-              <li v-for="m in members" :key="m.id" class="member-card">
-                <div class="member-name">
-                  {{ m.firstname }} {{ m.lastname }}
-                </div>
-
-                <div v-if="role === 'LEAD'" class="member-actions">
-                  <v-btn size="small" color="nav" @click="handleChangeMemberRole(m.id, m.projectRole)">
-                    Change Role
-                  </v-btn>
-
-                  <v-btn size="small" color="nav" @click="handleRemoveMember(m.id)">
-                    Remove
-                  </v-btn>
-                </div>
-
-                <span class="member-role fixed-role">{{ m.projectRole }}</span>
-              </li>
-            </ul>
-
-            <!-- ADD MEMBER UI (LEAD ONLY) -->
-            <template v-if="role === 'LEAD'">
-              <h3 style="margin-top: 14px">Add Member</h3>
-
-              <div class="add-member-row">
-                <v-text-field v-model="newMemberUserId" label="User ID" variant="outlined" density="compact"
-                  hide-details class="member-input" />
-
-                <v-select v-model="newMemberRole" :items="memberRoleItems" label="Role" variant="outlined"
-                  density="compact" hide-details class="member-input" />
-
-                <v-btn color="info" class="mt-3 mb-4" @click="handleAddMember" :disabled="memberActionLoading">
-                  {{ memberActionLoading ? 'Adding...' : 'Add Member' }}
-                </v-btn>
+      <!-- Two-column layout -->
+      <v-row>
+        <!-- Left: Vulnerabilities -->
+        <v-col cols="12" md="6">
+          <v-card variant="elevated" elevation="2">
+            <v-card-title class="d-flex justify-space-between align-center">
+              Vulnerabilities
+              <v-btn color="info" size="small" @click="showReportForm = !showReportForm">
+                + Report
+              </v-btn>
+            </v-card-title>
+            <v-card-text>
+              <div v-if="showReportForm" class="mb-4">
+                <Report :project-id="projectId" :on-success="() => { loadVulnerabilities(); showReportForm = false }" />
               </div>
-            </template>
-          </div>
 
-          <!-- ASSIGNMENTS -->
-          <div class="section-card">
-            <h2>Assignments</h2>
-            <p class="mb-">View, self-assign, and manage vulnerability roles.</p>
-            <v-btn color="info" @click="handleOpenAssignments">
-              Open Assignments
-            </v-btn>
-          </div>
-        </div>
-      </div>
-    </div>
-  </template>
+              <p v-if="loadingVulns" class="text-secondary">Loading vulnerabilities...</p>
+              <p v-else-if="vulnerabilities.length === 0" class="text-secondary">No vulnerabilities reported yet.</p>
+              <template v-else v-for="(v, i) in vulnerabilities" :key="v.id">
+                <v-divider v-if="i > 0" class="my-2" />
+                <div class="d-flex flex-column ga-1 py-1">
+                  <div class="d-flex justify-space-between align-center">
+                    <strong>{{ v.title }}</strong>
+                    <span :class="['severity-badge', severityClass(v.severity)]">{{ v.severity }}</span>
+                  </div>
+                  <div class="d-flex justify-space-between align-center">
+                    <span :class="['text-caption font-weight-bold', statusClass(v.status)]">{{ v.status }}</span>
+                    <div class="d-flex ga-1">
+                      <v-btn size="x-small" color="success" variant="tonal" @click="handleStatusChange(v.id, 'PATCHED')">Patch</v-btn>
+                      <v-btn size="x-small" color="secondary" variant="tonal" @click="handleStatusChange(v.id, 'VERIFIED')">Verify</v-btn>
+                      <v-btn v-if="role === 'LEAD'" size="x-small" color="error" variant="outlined" @click="handleDeleteVulnerability(v.id)">Delete</v-btn>
+                    </div>
+                  </div>
+                </div>
+              </template>
+            </v-card-text>
+          </v-card>
+        </v-col>
+
+        <!-- Right: Members + Assignments -->
+        <v-col cols="12" md="6">
+          <!-- Members -->
+          <v-card variant="elevated" elevation="2" class="mb-6">
+            <v-card-title>Project Members</v-card-title>
+            <v-card-text>
+              <template v-for="(m, i) in members" :key="m.id">
+                <v-divider v-if="i > 0" class="my-1" />
+                <div class="d-flex align-center justify-space-between py-2">
+                  <div>
+                    <span class="font-weight-bold">{{ m.firstname }} {{ m.lastname }}</span>
+                    <span class="text-secondary text-caption ml-2">{{ m.projectRole }}</span>
+                  </div>
+                  <div v-if="role === 'LEAD'" class="d-flex ga-1">
+                    <v-btn size="x-small" variant="outlined" @click="openRoleDialog(m)">Change Role</v-btn>
+                    <v-btn size="x-small" color="error" variant="outlined" @click="handleRemoveMember(m.id)">Remove</v-btn>
+                  </div>
+                </div>
+              </template>
+
+              <template v-if="role === 'LEAD'">
+                <v-divider class="my-3" />
+                <p class="text-secondary text-caption mb-2">Add Member</p>
+                <div class="d-flex flex-column ga-2">
+                  <div style="position: relative;">
+                    <v-text-field
+                      v-model="emailQuery"
+                      label="Search by email"
+                      variant="outlined"
+                      density="compact"
+                      hide-details
+                      :loading="emailSearchLoading"
+                      clearable
+                      autocomplete="off"
+                      @click:clear="clearEmailSelection"
+                    />
+                    <v-card
+                      v-if="emailSuggestions.length > 0"
+                      variant="elevated"
+                      elevation="8"
+                      style="position: absolute; width: 100%; z-index: 200; top: 100%; max-height: 200px; overflow-y: auto;"
+                    >
+                      <v-list density="compact" nav>
+                        <v-list-item
+                          v-for="u in emailSuggestions"
+                          :key="u.id"
+                          :title="u.email"
+                          :subtitle="`${u.firstname} ${u.lastname}`"
+                          @click="selectUser(u)"
+                        />
+                      </v-list>
+                    </v-card>
+                  </div>
+                  <v-chip v-if="selectedUser" size="small" color="info" closable @click:close="clearEmailSelection">
+                    {{ selectedUser.firstname }} {{ selectedUser.lastname }} ({{ selectedUser.email }})
+                  </v-chip>
+                  <v-select v-model="newMemberRole" :items="memberRoleItems" label="Role" variant="outlined" density="compact" hide-details />
+                  <div>
+                    <v-btn color="info" @click="handleAddMember" :disabled="memberActionLoading || !selectedUser">
+                      {{ memberActionLoading ? 'Adding...' : 'Add Member' }}
+                    </v-btn>
+                  </div>
+                </div>
+              </template>
+            </v-card-text>
+          </v-card>
+
+          <!-- Assignments -->
+          <v-card variant="elevated" elevation="2">
+            <v-card-title>Assignments</v-card-title>
+            <v-card-text>
+              <p class="text-secondary mb-3">View, self-assign, and manage vulnerability roles.</p>
+              <v-btn color="info" @click="handleOpenAssignments">Open Assignments</v-btn>
+            </v-card-text>
+          </v-card>
+        </v-col>
+      </v-row>
+    </template>
+
+    <!-- Role Change Dialog -->
+    <v-dialog v-model="roleDialog.open" max-width="360">
+      <v-card>
+        <v-card-title>Change Role</v-card-title>
+        <v-card-text>
+          <p class="text-secondary mb-4">
+            <strong>{{ roleDialog.memberName }}</strong> is currently
+            <strong>{{ roleDialog.currentRole }}</strong>.
+          </p>
+          <v-select
+            v-model="roleDialog.newRole"
+            :items="memberRoleItems"
+            label="New Role"
+            variant="outlined"
+            density="comfortable"
+          />
+        </v-card-text>
+        <v-card-actions class="justify-end ga-2">
+          <v-btn variant="text" @click="roleDialog.open = false">Cancel</v-btn>
+          <v-btn color="info" :disabled="roleDialog.newRole === roleDialog.currentRole" @click="confirmRoleChange">
+            Confirm
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
+  </v-container>
 </template>
 
 <style scoped>
-/* PAGE WRAPPER */
-.project-container-wide {
-  padding: 2rem;
-  color: rgb(var(--v-theme-on-surface));
-}
-
-/* HEADER */
-.project-header-wide {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-rows: auto auto auto;
-  column-gap: 32px;
-  row-gap: 10px;
-  margin-bottom: 25px;
-}
-
-.project-title-group {
-  grid-column: 1 / 2;
-  grid-row: 1 / 4;
-  max-width: 65%;
-}
-
-.project-description {
-  margin-top: 6px;
-  font-size: 1rem;
-  color: rgb(var(--v-theme-on-surface-variant));
-}
-
-.timestamps {
-  margin-top: 6px;
-  display: flex;
-  gap: 15px;
-  font-size: 0.9rem;
-  color: rgb(var(--v-theme-secondary));
-}
-
-/* RIGHT COLUMN */
-.project-meta-actions {
-  grid-column: 2 / 3;
-  grid-row: 1 / 4;
-  display: grid;
-  grid-template-rows: auto auto auto;
-  row-gap: 10px;
-  justify-items: end;
-}
-
-.role-badge {
-  grid-row: 6;
-  background: rgb(var(--v-theme-surface));
-  padding: 6px 14px;
-  border: 1px solid rgb(var(--v-theme-outline));
-  font-weight: 700;
-  font-size: 0.9rem;
-  border-radius: 999px;
-}
-
-.project-actions {
-  grid-row: 8;
-  display: flex;
-  gap: 10px;
-}
-
-/* CARDS */
-.section-card {
-  background: rgb(var(--v-theme-surface));
-  border: 1px solid rgb(var(--v-theme-outline));
-  padding: 20px;
-  border-radius: 12px;
-}
-
-.section-card h2 {
-  margin-top: 10px;
-  margin-bottom: 10px;
-}
-
-/* TWO-COLUMN GRID */
-.project-grid-2col {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-  gap: 24px;
-  margin-top: 25px;
-}
-
-.left-column {
-  display: flex;
-}
-
-.tall-card {
-  width: 100%;
-  min-height: 260px;
-}
-
-.right-column {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-/* MEMBERS */
-.member-list {
-  list-style: none;
-  padding: 0;
-}
-
-.member-card {
-  display: grid;
-  grid-template-columns: 1fr auto auto;
-  align-items: center;
-  background: rgb(var(--v-theme-surface-light));
-  padding: 10px 14px;
-  border-radius: 8px;
-  margin-bottom: 10px;
-  border: 1px solid rgb(var(--v-theme-outline));
-  min-height: 48px;
-  column-gap: 12px;
-}
-
-.member-name {
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  font-size: clamp(0.8rem, 1vw, 1rem);
-}
-
-.member-actions {
-  display: flex;
-  gap: 8px;
-}
-
-.fixed-role {
-  justify-self: end;
-  color: rgb(var(--v-theme-secondary));
-  font-size: 0.95rem;
-  font-weight: bold;
-  white-space: nowrap;
-}
-
-.add-member-row {
-  display: flex;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.member-input {
-  max-width: 200px;
-}
-
-/* VULNERABILITIES */
-.vuln-list {
-  list-style: none;
-  padding: 0;
-  margin-top: 12px;
-}
-
-.vuln-card {
-  background: rgb(var(--v-theme-surface-variant));
-  border: 1px solid rgb(var(--v-theme-outline));
-  border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 10px;
-}
-
-.vuln-main {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.vuln-sub {
-  margin-top: 8px;
-  font-size: 0.85rem;
-  color: rgb(var(--v-theme-secondary));
-}
-
-.severity {
-  padding: 3px 10px;
+.severity-badge {
+  padding: 2px 10px;
   border-radius: 999px;
   font-size: 0.75rem;
   font-weight: bold;
 }
 
-.severity.low {
-  background: rgb(var(--v-theme-severity-low));
-  color: rgb(var(--v-theme-on-severity-low));
-}
+.severity-low    { background: rgb(var(--v-theme-severity-low));      color: rgb(var(--v-theme-on-severity-low)); }
+.severity-medium { background: rgb(var(--v-theme-severity-medium));   color: rgb(var(--v-theme-on-severity-medium)); }
+.severity-high   { background: rgb(var(--v-theme-severity-high));     color: rgb(var(--v-theme-on-severity-high)); }
+.severity-critical { background: rgb(var(--v-theme-severity-critical)); color: rgb(var(--v-theme-on-severity-critical)); }
 
-.severity.medium {
-  background: rgb(var(--v-theme-severity-medium));
-  color: rgb(var(--v-theme-on-severity-medium));
-}
-
-.severity.high {
-  background: rgb(var(--v-theme-severity-high));
-  color: rgb(var(--v-theme-on-severity-high));
-}
-
-.severity.critical {
-  background: rgb(var(--v-theme-severity-critical));
-  color: rgb(var(--v-theme-on-severity-critical));
-}
-
-.status {
-  font-weight: bold;
-  text-transform: uppercase;
-}
-
-.status.reported {
-  color: rgb(var(--v-theme-info));
-}
-
-.status.in_progress {
-  color: rgb(var(--v-theme-status-in-progress));
-}
-
-.status.patched {
-  color: rgb(var(--v-theme-status-patched));
-}
-
-.status.verified {
-  color: rgb(var(--v-theme-status-verified));
-}
-
-.status.under_review {
-  color: rgb(var(--v-theme-warning));
-}
-
-.vuln-actions {
-  margin-top: 8px;
-  display: flex;
-  gap: 8px;
-}
-
-.report-section form {
-  margin: 6px auto 40px auto !important;
-  padding: 5px !important;
-}
-
-.report-section input,
-.report-section textarea {
-  margin: 6px 0 !important;
-}
+.status-reported    { color: rgb(var(--v-theme-info)); }
+.status-in_progress { color: rgb(var(--v-theme-status-in-progress)); }
+.status-patched     { color: rgb(var(--v-theme-status-patched)); }
+.status-verified    { color: rgb(var(--v-theme-status-verified)); }
+.status-under_review { color: rgb(var(--v-theme-warning)); }
 </style>

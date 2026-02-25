@@ -75,4 +75,26 @@ public class UserController {
         // 204 = no content, frontend should redirect to log-in where the user can get a new access token
         return ResponseEntity.noContent().build();
     }
+
+    // Search users by email prefix — used for the add-member autocomplete in project pages
+    @GetMapping("/search")
+    public ResponseEntity<ApiResponse> searchUsers(@RequestParam String email) {
+        return ResponseEntity.ok(new ApiResponse(true, "Users found", userService.searchByEmail(email)));
+    }
+
+    @GetMapping("/email-notifications")
+    public ResponseEntity<ApiResponse> getEmailNotifications(Authentication auth) {
+        boolean enabled = userService.getEmailNotifications(auth);
+        return ResponseEntity.ok(new ApiResponse(true, "Email notification setting retrieved", enabled));
+    }
+
+    @PutMapping("/email-notifications")
+    public ResponseEntity<ApiResponse> setEmailNotifications(
+            @RequestParam boolean enabled,
+            Authentication auth
+    ) {
+        boolean result = userService.setEmailNotifications(enabled, auth);
+        return ResponseEntity.ok(new ApiResponse(true,
+                result ? "Email notifications enabled" : "Email notifications disabled", result));
+    }
 }

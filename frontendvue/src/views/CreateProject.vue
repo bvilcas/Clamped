@@ -89,7 +89,7 @@ const handleSubmit = async () => {
 
     <v-btn
       type="submit"
-      color="primary"
+      color="info"
       block
       size="large"
       class="mt-2"

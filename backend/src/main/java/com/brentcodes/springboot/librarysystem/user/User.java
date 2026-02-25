@@ -61,6 +61,11 @@ public class User {
     @Nullable // can be null
     private Instant credentialsChangedAt; // to prevent old access tokens from being used in other sessions
 
+    // Whether to receive email alerts for in-app notifications
+    @Column(name = "email_notifications_enabled", nullable = false)
+    @Builder.Default
+    private boolean emailNotificationsEnabled = false;
+
     // we need these cuz we are using email as "username"
     public String getUsername() {
         return email;

@@ -1,5 +1,7 @@
 package com.brentcodes.springboot.librarysystem.userproject;
 
+import com.brentcodes.springboot.librarysystem.notification.NotificationService;
+import com.brentcodes.springboot.librarysystem.notification.NotificationType;
 import com.brentcodes.springboot.librarysystem.project.Project;
 import com.brentcodes.springboot.librarysystem.project.ProjectRepository;
 import com.brentcodes.springboot.librarysystem.user.User;
@@ -31,13 +33,15 @@ public class UserProjectService {
     // A lot of these imports of userRepo and projectRepo are for checking existence of a user or project
     private final UserRepository userRepository;
     private final ProjectRepository projectRepository;
+    private final NotificationService notificationService;
 
-    public UserProjectService(UserProjectRepository userProjectRepository, UserVulnerabilityRepository userVulnerabilityRepository,UserRepository userRepository,  VulnerabilityRepository vulnerabilityRepository, ProjectRepository projectRepository) {
+    public UserProjectService(UserProjectRepository userProjectRepository, UserVulnerabilityRepository userVulnerabilityRepository, UserRepository userRepository, VulnerabilityRepository vulnerabilityRepository, ProjectRepository projectRepository, NotificationService notificationService) {
         this.userProjectRepository = userProjectRepository;
         this.userVulnerabilityRepository = userVulnerabilityRepository;
         this.userRepository = userRepository;
         this.vulnerabilityRepository = vulnerabilityRepository;
         this.projectRepository = projectRepository;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -302,6 +306,12 @@ public class UserProjectService {
         userProject.setRole(role);
 
         userProjectRepository.save(userProject);
+
+        notificationService.notify(
+                user.getId(), NotificationType.PROJECT_ADDED,
+                "You have been added to project '" + project.getName() + "' as " + role.name().toLowerCase(),
+                project.getId(), null
+        );
         return new RoleCheckerResponse(
                 false,
                 "Member successfully added."
@@ -350,6 +360,9 @@ public class UserProjectService {
                 .findByUserIdAndProjectId(request.userId(), request.projectId())
                 .orElseThrow(() -> new IllegalArgumentException("User not in project"));
 
+        String projectName = link.getProject().getName();
+        Long projectId = link.getProject().getId();
+
         // Delete all UserVulnerability assignments for this user in this project
         userVulnerabilityRepository.deleteAllAssignmentsForUserInProject(
                 request.userId(),
@@ -357,6 +370,12 @@ public class UserProjectService {
         );
 
         userProjectRepository.delete(link);
+
+        notificationService.notify(
+                request.userId(), NotificationType.PROJECT_REMOVED,
+                "You have been removed from project '" + projectName + "'",
+                projectId, null
+        );
     }
 
     @Transactional(readOnly = true)

@@ -19,6 +19,11 @@ import Settings from '@/views/Settings.vue'
 import Help from '@/views/Help.vue'
 import Contact from '@/views/Contact.vue'
 import About from '@/views/About.vue'
+import Messages from '@/views/Messages.vue'
+import Team from '@/views/Team.vue'
+import Assignments from '@/views/Assignments.vue'
+import Notifications from '@/views/Notifications.vue'
+import Calendar from '@/views/Calendar.vue'
 
 const routes: RouteRecordRaw[] = [
   // Default redirect (handled in beforeEach)
@@ -128,6 +133,36 @@ const routes: RouteRecordRaw[] = [
     path: '/about',
     name: 'About',
     component: About,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/messages',
+    name: 'Messages',
+    component: Messages,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/team',
+    name: 'Team',
+    component: Team,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/project/:projectId/assignments',
+    name: 'Assignments',
+    component: Assignments,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/notifications',
+    name: 'Notifications',
+    component: Notifications,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/calendar',
+    name: 'Calendar',
+    component: Calendar,
     meta: { requiresAuth: true }
   }
 ]

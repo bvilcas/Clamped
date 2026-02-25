@@ -2,57 +2,81 @@
 import { onMounted, ref } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { applySettings, loadSettings, saveSettings } from '@/utils/settingsStorage'
+import { fetchWithAuth } from '@/utils/fetchWithAuth'
 
 const authStore = useAuthStore()
 
-const notificationsEnabled = ref(false)
-const notificationEmail = ref('')
+// ── Email notifications (persisted in DB) ─────────────────────
+const emailNotificationsEnabled = ref(false)
+const emailNotifLoading = ref(false)
+const emailNotifSaved = ref(false)
+const accountEmail = ref('')
+
+const fetchEmailNotifSetting = async () => {
+  try {
+    const [notifRes, profileRes] = await Promise.all([
+      fetchWithAuth('http://localhost:8080/api/v1/users/email-notifications'),
+      fetchWithAuth('http://localhost:8080/api/v1/users/profile'),
+    ])
+    if (notifRes.ok) {
+      const d = await notifRes.json()
+      emailNotificationsEnabled.value = d.data ?? false
+    }
+    if (profileRes.ok) {
+      const d = await profileRes.json()
+      accountEmail.value = d.data?.email ?? ''
+    }
+  } catch { /* silent */ }
+}
+
+const handleEmailNotifSave = async () => {
+  emailNotifLoading.value = true
+  emailNotifSaved.value = false
+  try {
+    const res = await fetchWithAuth(
+      `http://localhost:8080/api/v1/users/email-notifications?enabled=${emailNotificationsEnabled.value}`,
+      { method: 'PUT' }
+    )
+    if (res.ok) {
+      emailNotifSaved.value = true
+      setTimeout(() => { emailNotifSaved.value = false }, 3000)
+    }
+  } catch { /* silent */ } finally {
+    emailNotifLoading.value = false
+  }
+}
+
+// ── Display / Preferences (local storage) ─────────────────────
 const displayMode = ref('system')
 const textSize = ref('medium')
 const defaultPage = ref('projects')
 const autoOpenLastProject = ref(true)
+const displaySaved = ref(false)
+const prefSaved = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
   const settings = loadSettings()
-  notificationsEnabled.value = settings.notificationsEnabled
-  notificationEmail.value = settings.notificationEmail
   displayMode.value = settings.displayMode
   textSize.value = settings.textSize
   defaultPage.value = settings.defaultPage
   autoOpenLastProject.value = settings.autoOpenLastProject
   applySettings(settings)
+  await fetchEmailNotifSetting()
 })
-
-const buildSettings = () => ({
-  notificationsEnabled: notificationsEnabled.value,
-  notificationEmail: notificationEmail.value,
-  displayMode: displayMode.value,
-  textSize: textSize.value,
-  defaultPage: defaultPage.value,
-  autoOpenLastProject: autoOpenLastProject.value,
-})
-
-const handleNotificationsSave = () => {
-  if (notificationsEnabled.value && !notificationEmail.value.trim()) {
-    alert('Please add an email address for notifications.')
-    return
-  }
-  const next = buildSettings()
-  saveSettings(next)
-  alert('Notification settings saved.')
-}
 
 const handleDisplaySave = () => {
-  const next = buildSettings()
+  const next = { ...loadSettings(), displayMode: displayMode.value, textSize: textSize.value }
   saveSettings(next)
   applySettings(next)
-  alert('Display settings saved.')
+  displaySaved.value = true
+  setTimeout(() => { displaySaved.value = false }, 3000)
 }
 
 const handlePreferencesSave = () => {
-  const next = buildSettings()
+  const next = { ...loadSettings(), defaultPage: defaultPage.value, autoOpenLastProject: autoOpenLastProject.value }
   saveSettings(next)
-  alert('Preferences saved.')
+  prefSaved.value = true
+  setTimeout(() => { prefSaved.value = false }, 3000)
 }
 
 const handleLogoutAllSessions = async () => {
@@ -60,10 +84,6 @@ const handleLogoutAllSessions = async () => {
   if (confirmed) {
     await authStore.logoutAllSessions()
   }
-}
-
-const sendTestEmail = () => {
-  window.location.href = `mailto:${notificationEmail.value}?subject=Clamped%20Alerts`
 }
 
 const displayModeItems = [
@@ -89,36 +109,34 @@ const defaultPageItems = [
   <v-container class="pa-8">
     <h1 class="text-info mb-6">Settings</h1>
 
-    <!-- Notifications -->
+    <!-- Email Notifications -->
     <v-card variant="elevated" elevation="2" class="mb-6">
-      <v-card-title>Notifications</v-card-title>
+      <v-card-title>Email Notifications</v-card-title>
       <v-card-text>
-        <v-form @submit.prevent="handleNotificationsSave" class="d-flex flex-column ga-2">
-          <v-checkbox
-            v-model="notificationsEnabled"
-            label="Enable alerts"
-            density="compact"
-            hide-details
-          />
-          <v-text-field
-            v-model="notificationEmail"
-            label="Alert email address"
-            type="email"
-            variant="outlined"
-            density="comfortable"
-            :disabled="!notificationsEnabled"
-          />
-          <div class="d-flex ga-2">
-            <v-btn
-              v-if="notificationsEnabled && notificationEmail.trim()"
-              color="secondary"
-              @click="sendTestEmail"
-            >
-              Send test email
-            </v-btn>
-            <v-btn type="submit" color="info">Save</v-btn>
-          </div>
-        </v-form>
+        <p class="text-body-2 text-secondary mb-3">
+          Receive an email at <strong>{{ accountEmail || 'your account email' }}</strong> whenever
+          you get an in-app notification (assignments, project changes, new reports, etc.).
+        </p>
+        <v-switch
+          v-model="emailNotificationsEnabled"
+          :label="emailNotificationsEnabled ? 'Email notifications on' : 'Email notifications off'"
+          color="info"
+          hide-details
+          density="compact"
+          class="mb-3"
+        />
+        <v-alert
+          v-if="emailNotifSaved"
+          type="success"
+          variant="tonal"
+          density="compact"
+          class="mb-3"
+        >Settings saved.</v-alert>
+        <v-btn
+          color="info"
+          :loading="emailNotifLoading"
+          @click="handleEmailNotifSave"
+        >Save</v-btn>
       </v-card-text>
     </v-card>
 
@@ -141,6 +159,7 @@ const defaultPageItems = [
             variant="outlined"
             density="comfortable"
           />
+          <v-alert v-if="displaySaved" type="success" variant="tonal" density="compact" class="mb-1">Settings saved.</v-alert>
           <div><v-btn type="submit" color="info">Save</v-btn></div>
         </v-form>
       </v-card-text>
@@ -164,6 +183,7 @@ const defaultPageItems = [
             density="compact"
             hide-details
           />
+          <v-alert v-if="prefSaved" type="success" variant="tonal" density="compact" class="mb-1">Settings saved.</v-alert>
           <div><v-btn type="submit" color="info">Save</v-btn></div>
         </v-form>
       </v-card-text>

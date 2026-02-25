@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue"
+import { computed, ref } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
 import { useSidebar } from "@/composables/useSidebar"
@@ -11,9 +11,16 @@ const { toggleSidebar } = useSidebar()
 
 const isProjectsActive = computed(() => route.path.startsWith("/projects") || route.path.startsWith("/project/"))
 const isVulnsActive = computed(() => route.path.startsWith("/vulns"))
+const isMessagesActive = computed(() => route.path.startsWith("/messages"))
+const isTeamActive = computed(() => route.path.startsWith("/team"))
 const isHelpActive = computed(() => route.path.startsWith("/help"))
 const isContactActive = computed(() => route.path.startsWith("/contact"))
 const isAboutActive = computed(() => route.path.startsWith("/about"))
+const isCalendarActive = computed(() => route.path.startsWith("/calendar"))
+
+const moreOpen = ref(
+  route.path.startsWith("/calendar") // auto-expand if already on a "more" route
+)
 </script>
 
 <template>
@@ -36,8 +43,39 @@ const isAboutActive = computed(() => route.path.startsWith("/about"))
         prepend-icon="mdi-shield-alert-outline" @click="router.push('/vulns')">
         My Vulns
       </v-btn>
-      <v-btn variant="text" block class="nav-item" prepend-icon="mdi-message-outline">Messages</v-btn>
-      <v-btn variant="text" block class="nav-item" prepend-icon="mdi-account-group-outline">Team</v-btn>
+      <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isMessagesActive }"
+        prepend-icon="mdi-message-outline" @click="router.push('/messages')">
+        Messages
+      </v-btn>
+      <v-btn variant="text" block class="nav-item" :class="{ 'nav-item-active': isTeamActive }"
+        prepend-icon="mdi-account-group-outline" @click="router.push('/team')">
+        Team
+      </v-btn>
+
+      <!-- More... collapsible -->
+      <v-btn
+        variant="text"
+        block
+        class="nav-item more-btn"
+        :prepend-icon="moreOpen ? 'mdi-chevron-up' : 'mdi-chevron-down'"
+        @click="moreOpen = !moreOpen"
+      >
+        More...
+      </v-btn>
+      <v-expand-transition>
+        <div v-show="moreOpen" class="more-section">
+          <v-btn
+            variant="text"
+            block
+            class="nav-item nav-item--sub"
+            :class="{ 'nav-item-active': isCalendarActive }"
+            prepend-icon="mdi-calendar-outline"
+            @click="router.push('/calendar')"
+          >
+            Calendar
+          </v-btn>
+        </div>
+      </v-expand-transition>
     </nav>
 
     <div class="d-flex flex-column ga-2 mt-auto mb-4">
@@ -115,6 +153,19 @@ const isAboutActive = computed(() => route.path.startsWith("/about"))
 
 .nav-item-active {
   background-color: rgba(var(--v-theme-on-surface), 0.20) !important;
+}
+
+.more-btn {
+  color: rgb(var(--v-theme-secondary)) !important;
+  font-size: 0.8rem !important;
+}
+
+.more-section {
+  padding-left: 12px;
+}
+
+.nav-item--sub {
+  font-size: 0.85rem !important;
 }
 
 @media (max-width: 768px) {
